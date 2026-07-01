@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/hooks/useLanguage";
+
 interface ImpactCardProps {
   decompositionTime: string;
   recyclable: boolean;
@@ -7,10 +9,12 @@ interface ImpactCardProps {
 }
 
 export default function ImpactCard({ decompositionTime, recyclable, recyclingBin }: ImpactCardProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-zinc-200/50 dark:bg-zinc-950 dark:ring-zinc-800/50">
       <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-        Waste Properties
+        {t("card.impact.title")}
       </h3>
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -22,8 +26,8 @@ export default function ImpactCard({ decompositionTime, recyclable, recyclingBin
             </svg>
           </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Recyclable</p>
-            <p className="font-semibold text-zinc-900 dark:text-zinc-100">{recyclable ? "Yes" : "No"}</p>
+            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t("card.impact.recyclable")}</p>
+            <p className="font-semibold text-zinc-900 dark:text-zinc-100">{recyclable ? t("card.impact.yes") : t("card.impact.no")}</p>
           </div>
         </div>
 
@@ -35,7 +39,7 @@ export default function ImpactCard({ decompositionTime, recyclable, recyclingBin
             </svg>
           </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Designated Bin</p>
+            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t("card.impact.bin")}</p>
             <p className="font-semibold text-zinc-900 dark:text-zinc-100">{recyclingBin}</p>
           </div>
         </div>
@@ -48,7 +52,7 @@ export default function ImpactCard({ decompositionTime, recyclable, recyclingBin
             </svg>
           </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Estimated Decomposition Time</p>
+            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t("card.impact.decomp")}</p>
             <p className="font-semibold text-zinc-900 dark:text-zinc-100">{decompositionTime}</p>
           </div>
         </div>
@@ -56,3 +60,4 @@ export default function ImpactCard({ decompositionTime, recyclable, recyclingBin
     </div>
   );
 }
+

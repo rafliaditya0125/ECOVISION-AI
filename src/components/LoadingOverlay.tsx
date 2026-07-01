@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const messages = [
-  "Analyzing image...",
-  "Detecting object...",
-  "Calculating environmental impact...",
-  "Preparing recommendation...",
-];
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function LoadingOverlay() {
+  const { t } = useLanguage();
   const [messageIndex, setMessageIndex] = useState(0);
+
+  const messages = [
+    t("loading.analyzing"),
+    t("loading.detecting"),
+    t("loading.calculating"),
+    t("loading.preparing"),
+  ];
 
   useEffect(() => {
     // Rotate messages every 2 seconds
@@ -18,7 +20,7 @@ export default function LoadingOverlay() {
       setMessageIndex((prev) => (prev + 1) % messages.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [messages.length]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-xl dark:bg-zinc-950/80">
@@ -51,3 +53,4 @@ export default function LoadingOverlay() {
     </div>
   );
 }
+

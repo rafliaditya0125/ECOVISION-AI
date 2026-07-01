@@ -20,6 +20,7 @@
 
 ## Sprint 3
 
+- User Authentication (Login / Register)
 - Dashboard
 - History
 - Environmental Impact

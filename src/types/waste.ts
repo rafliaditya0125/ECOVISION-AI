@@ -21,13 +21,40 @@ export type RecyclingDifficulty = 'Easy' | 'Medium' | 'Hard' | 'Specialized';
 export interface WasteKnowledge {
   id: string;
   name: string;
-  category: WasteCategory;
+  category: string; // Dynamic localized string
   description: string;
   recyclable: boolean;
-  recyclingBin: string;
-  estimatedDecomposition: string;
+  recyclingBin: string; // Dynamic localized string
+  estimatedDecomposition: string; // Dynamic localized string
   environmentalImpact: string;
   recommendations: string[];
-  difficulty: RecyclingDifficulty;
+  difficulty: string; // Dynamic localized string
   confidenceNote: string;
 }
+
+/**
+ * Interface representing a waste item stored with both EN and ID translations.
+ */
+export interface BilingualWasteKnowledge {
+  id: string;
+  nameEn: string;
+  nameId: string;
+  categoryEn: string;
+  categoryId: string;
+  descriptionEn: string;
+  descriptionId: string;
+  recyclable: boolean;
+  recyclingBinEn: string;
+  recyclingBinId: string;
+  estimatedDecompositionEn: string;
+  estimatedDecompositionId: string;
+  environmentalImpactEn: string;
+  environmentalImpactId: string;
+  recommendationsEn: string[];
+  recommendationsId: string[];
+  difficultyEn: string;
+  difficultyId: string;
+  confidenceNoteEn: string;
+  confidenceNoteId: string;
+}
+

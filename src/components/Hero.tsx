@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/hooks/useLanguage";
 import Link from "next/link";
 
 export default function Hero() {
   const [scanState, setScanState] = useState("idle"); // idle -> scanning -> identified
   const [progress, setProgress] = useState(0);
+  const { t } = useLanguage();
 
   // Simple scan demo cycle for interactivity and rich aesthetics
   useEffect(() => {
@@ -68,20 +70,20 @@ export default function Hero() {
             {/* Tagline */}
             <div className="mx-auto lg:mx-0 mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
               <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              LKS Nasional 2026 AI Exhibition Project
+              {t("hero.tagline")}
             </div>
 
             {/* Title */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] sm:leading-[1.08] lg:leading-[1.05]">
-              Scan. Sort.{" "}
+              {t("hero.title1")}
               <span className="bg-gradient-to-r from-emerald-500 to-blue-600 bg-clip-text text-transparent">
-                Save the Planet.
+                {t("hero.title2")}
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="mt-6 text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto lg:mx-0 font-light leading-relaxed">
-              AI-powered waste classification and environmental education platform that helps everyone recycle correctly.
+              {t("hero.subtitle")}
             </p>
 
             {/* Actions */}
@@ -90,7 +92,7 @@ export default function Hero() {
                 href="/scan"
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-blue-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/35 active:scale-98"
               >
-                Get Started
+                {t("hero.getStarted")}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -106,7 +108,7 @@ export default function Hero() {
                 href="#about"
                 className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white/50 px-8 py-3.5 text-base font-semibold text-zinc-700 backdrop-blur-sm transition-all duration-300 hover:bg-zinc-50 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300 dark:hover:bg-zinc-850 dark:hover:border-zinc-700"
               >
-                Learn More
+                {t("hero.learnMore")}
               </a>
             </div>
 
@@ -114,15 +116,15 @@ export default function Hero() {
             <div className="mt-12 pt-8 border-t border-zinc-200/50 dark:border-zinc-800/50 grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0">
               <div>
                 <p className="text-2xl font-bold text-zinc-950 dark:text-zinc-50">98.4%</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">AI Accuracy</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("hero.aiAccuracy")}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-950 dark:text-zinc-50">&lt; 1s</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">Scan Speed</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("hero.scanSpeed")}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-950 dark:text-zinc-50">100%</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">Open Source</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("hero.openSource")}</p>
               </div>
             </div>
           </div>
@@ -167,7 +169,7 @@ export default function Hero() {
                   {/* State text */}
                   <div className="absolute bottom-6 bg-zinc-950/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] tracking-wide font-medium flex items-center gap-1.5">
                     <span className={`h-1.5 w-1.5 rounded-full ${scanState === "scanning" ? "bg-amber-400 animate-ping" : "bg-emerald-400 animate-pulse"}`} />
-                    {scanState === "scanning" ? "CLASSIFYING WASTE..." : "READY TO SCAN"}
+                    {scanState === "scanning" ? t("hero.classifying") : t("hero.readyToScan")}
                   </div>
                 </div>
 
@@ -175,10 +177,10 @@ export default function Hero() {
                 <div className="mt-4 pt-3 border-t border-zinc-200/50 dark:border-zinc-800/50 flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-bold tracking-wider text-zinc-400 dark:text-zinc-500 uppercase">
-                      Classification Results
+                      {t("hero.results")}
                     </span>
                     <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      {scanState === "scanning" ? `${Math.round(progress)}%` : "98.4% Confidence"}
+                      {scanState === "scanning" ? `${Math.round(progress)}%` : `98.4% ${t("hero.confidence")}`}
                     </span>
                   </div>
 
@@ -190,10 +192,10 @@ export default function Hero() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-50 truncate">
-                        {scanState === "scanning" ? "Scanning item..." : "PET Plastic Bottle"}
+                        {scanState === "scanning" ? t("hero.scanningItem") : t("hero.petBottle")}
                       </p>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                        {scanState === "scanning" ? "Analyzing polymer profile..." : "Yellow Recycling Bin"}
+                        {scanState === "scanning" ? t("hero.analyzingPolymer") : t("hero.yellowBin")}
                       </p>
                     </div>
                   </div>
@@ -208,7 +210,7 @@ export default function Hero() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">CO2 Offset</p>
+                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">{t("hero.co2Offset")}</p>
                   <p className="text-xs font-bold text-zinc-900 dark:text-zinc-50">-2.4kg</p>
                 </div>
               </div>
@@ -221,8 +223,8 @@ export default function Hero() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">Sorted Bin</p>
-                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Recyclable</p>
+                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">{t("hero.sortedBin")}</p>
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{t("hero.recyclable")}</p>
                 </div>
               </div>
             </div>

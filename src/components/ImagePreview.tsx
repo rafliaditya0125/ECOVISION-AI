@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/hooks/useLanguage";
+
 interface ImagePreviewProps {
   imageUrl: string;
   onReplace: () => void;
@@ -13,6 +15,8 @@ export default function ImagePreview({
   onRemove,
   onAnalyze,
 }: ImagePreviewProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="flex w-full flex-col items-center space-y-8 rounded-3xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-zinc-200/50 dark:bg-zinc-950 dark:ring-zinc-800/50 sm:p-8">
       {/* Image Container */}
@@ -31,13 +35,13 @@ export default function ImagePreview({
             onClick={onReplace}
             className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white"
           >
-            Replace Image
+            {t("scan.replaceImage")}
           </button>
           <button
             onClick={onRemove}
             className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
           >
-            Remove
+            {t("scan.remove")}
           </button>
         </div>
 
@@ -45,7 +49,7 @@ export default function ImagePreview({
           onClick={onAnalyze}
           className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/30 active:scale-95"
         >
-          Analyze Waste
+          {t("scan.analyze")}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -65,3 +69,4 @@ export default function ImagePreview({
     </div>
   );
 }
+

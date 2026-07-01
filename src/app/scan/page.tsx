@@ -7,9 +7,12 @@ import Footer from "@/components/Footer";
 import UploadZone from "@/components/UploadZone";
 import ImagePreview from "@/components/ImagePreview";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { useLanguage } from "@/hooks/useLanguage";
+import { getClientApiKey } from "@/lib/apiKey";
 
 export default function ScanPage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Store both the object URL (for preview) and the raw File (for API submission)
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -56,18 +59,21 @@ export default function ScanPage() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         body: formData,
+        headers: {
+          "x-api-key": getClientApiKey(),
+        },
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || "Analysis failed.");
+        throw new Error(data.message || t("scan.errorTitle"));
       }
 
       // Navigate to result page, passing the waste ID and confidence as query params
       router.push(`/result?id=${encodeURIComponent(data.id)}&confidence=${data.confidence}`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "An unexpected error occurred.";
+      const message = err instanceof Error ? err.message : t("scan.errorDefault");
       setErrorMessage(message);
       setIsAnalyzing(false);
     }
@@ -82,10 +88,10 @@ export default function ScanPage() {
           {/* Header Section */}
           <div className="mb-12 text-center">
             <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
-              Waste Scanner
+              {t("scan.title")}
             </h1>
             <p className="mt-4 text-lg text-zinc-500 dark:text-zinc-400">
-              Upload an image of waste and let AI analyze it.
+              {t("scan.subtitle")}
             </p>
           </div>
 
@@ -122,4 +128,5 @@ export default function ScanPage() {
     </div>
   );
 }
+
 

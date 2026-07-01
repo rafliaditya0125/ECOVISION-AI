@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface ResultCardProps {
   name: string;
@@ -11,6 +12,8 @@ interface ResultCardProps {
 }
 
 export default function ResultCard({ name, category, confidence, imageUrl }: ResultCardProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="flex flex-col items-center overflow-hidden rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-zinc-200/50 dark:bg-zinc-950 dark:ring-zinc-800/50">
       {/* Uploaded image — shows real preview if available, otherwise a placeholder */}
@@ -53,11 +56,12 @@ export default function ResultCard({ name, category, confidence, imageUrl }: Res
         <div className="mt-4 flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-1.5 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-            Confidence Score: <span className="font-bold text-zinc-900 dark:text-zinc-100">{confidence}%</span>
+            {t("common.confidenceScore")}: <span className="font-bold text-zinc-900 dark:text-zinc-100">{confidence}%</span>
           </span>
         </div>
       </div>
     </div>
   );
 }
+
 

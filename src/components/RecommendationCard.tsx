@@ -1,16 +1,20 @@
 "use client";
 
+import { useLanguage } from "@/hooks/useLanguage";
+
 interface RecommendationCardProps {
   recommendations: string[];
 }
 
 export default function RecommendationCard({ recommendations }: RecommendationCardProps) {
+  const { t } = useLanguage();
+
   if (!recommendations || recommendations.length === 0) return null;
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-zinc-200/50 dark:bg-zinc-950 dark:ring-zinc-800/50">
       <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-        Actionable Recommendations
+        {t("card.rec.title")}
       </h3>
       <ul className="space-y-3">
         {recommendations.map((rec, index) => (
@@ -29,3 +33,4 @@ export default function RecommendationCard({ recommendations }: RecommendationCa
     </div>
   );
 }
+

@@ -10,11 +10,16 @@ import RecommendationCard from "@/components/RecommendationCard";
 import ResponsibleAICard from "@/components/ResponsibleAICard";
 import LearnMoreCard from "@/components/LearnMoreCard";
 import { getWasteKnowledge } from "@/lib/knowledge";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
+import { isLocalStorageMode, saveScan } from "@/lib/clientStorage";
 import Link from "next/link";
 
 function ResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { language, t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
 
   // Read waste ID and confidence from URL query params (e.g. /result?id=plastic-pet&confidence=96)
   const id = searchParams.get("id") ?? "unknown";
@@ -33,8 +38,47 @@ function ResultContent() {
     router.push("/scan");
   };
 
-  // Look up the Knowledge Engine — null means unrecognized ID
-  const wasteData = getWasteKnowledge(id);
+  // Look up the Knowledge Engine — null means unrecognized ID (passing current language preference)
+  const wasteData = getWasteKnowledge(id, language);
+
+  // Log scan event — localStorage mode saves directly in browser; MySQL mode POSTs to API
+  const [hasLogged, setHasLogged] = useState(false);
+  useEffect(() => {
+    if (hasLogged || !wasteData) return;
+
+    if (isLocalStorageMode()) {
+      // Guest mode: save directly to browser localStorage
+      setHasLogged(true);
+      saveScan({
+        wasteId: id,
+        name: wasteData.name,
+        category: wasteData.category,
+        confidence,
+        recyclable: wasteData.recyclable,
+      });
+    } else if (isAuthenticated && user) {
+      // MySQL mode: POST to API route
+      setHasLogged(true);
+      fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wasteId: id,
+          name: wasteData.name,
+          category: wasteData.category,
+          confidence: confidence,
+          recyclable: wasteData.recyclable,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            console.log("Logged scan to history:", data.scanItem);
+          }
+        })
+        .catch((err) => console.error("Error logging scan to history:", err));
+    }
+  }, [isAuthenticated, user, wasteData, hasLogged, id, confidence]);
 
   if (!wasteData) {
     return (
@@ -45,15 +89,15 @@ function ResultContent() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Waste Type Not Recognized</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{t("result.notRecognizedTitle")}</h1>
           <p className="text-zinc-500 dark:text-zinc-400">
-            The AI could not confidently identify this item. Try scanning again with a clearer image.
+            {t("result.notRecognizedDesc")}
           </p>
           <Link
             href="/scan"
             className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
           >
-            Try Again
+            {t("result.tryAgain")}
           </Link>
         </div>
       </main>
@@ -67,19 +111,19 @@ function ResultContent() {
         <div className="mb-10 flex flex-col items-center text-center sm:flex-row sm:justify-between sm:text-left">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
-              Analysis Result
+              {t("result.title")}
             </h1>
             <p className="mt-2 text-lg text-zinc-500 dark:text-zinc-400">
-              Here is what our AI detected.
+              {t("result.subtitle")}
             </p>
           </div>
 
           <div className="mt-6 sm:mt-0">
             <button
               onClick={handleScanAnother}
-              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-sm ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-50 dark:ring-zinc-700 dark:hover:bg-zinc-800"
+              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-sm ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:ring-zinc-700 dark:hover:bg-zinc-800"
             >
-              Scan Another Item
+              {t("result.scanAnother")}
             </button>
           </div>
         </div>
@@ -137,4 +181,3 @@ export default function ResultPage() {
     </div>
   );
 }
-

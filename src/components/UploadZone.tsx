@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface UploadZoneProps {
   /** Called when the user selects or drops a valid image file */
@@ -9,6 +10,7 @@ interface UploadZoneProps {
 
 export default function UploadZone({ onImageSelect }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const { t } = useLanguage();
 
   // Handle drag events
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -87,13 +89,14 @@ export default function UploadZone({ onImageSelect }: UploadZoneProps) {
 
         <div className="space-y-1">
           <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Click or drag image to upload
+            {t("scan.clickOrDrag")}
           </p>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Supported formats: JPEG, JPG, PNG
+            {t("scan.supportedFormats")}
           </p>
         </div>
       </div>
     </div>
   );
 }
+

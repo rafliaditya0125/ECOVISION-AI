@@ -10,6 +10,12 @@ export interface AIResult {
   detectedLabel: string;
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  image?: string; // Optional base64 data URL
+}
+
 /**
  * The standard contract that all AI Providers (Mock, Gemini, OpenAI, Local, etc.) must implement.
  * This ensures the Provider/Strategy pattern is maintained.
@@ -21,4 +27,11 @@ export interface AIProvider {
    * @returns A promise that resolves to an AIResult.
    */
   analyze(image: File): Promise<AIResult>;
+
+  /**
+   * Converses with the AI model using chat messages history.
+   * @param messages - Array of chat history messages.
+   * @returns The AI response text.
+   */
+  chat?(messages: ChatMessage[]): Promise<string>;
 }
