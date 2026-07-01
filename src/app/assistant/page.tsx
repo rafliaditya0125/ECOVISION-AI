@@ -108,6 +108,62 @@ export default function AssistantPage() {
     t("assistant.suggested.q3"),
   ];
 
+  const parseMarkdown = (text: string) => {
+    const lines = text.split("\n");
+    return lines.map((line, lineIdx) => {
+      // Check for bullet point
+      const isBullet = line.trim().startsWith("* ") || line.trim().startsWith("- ");
+      // Check for numbered list
+      const isNumbered = /^\d+\.\s+/.test(line.trim());
+      
+      let cleanLine = line;
+      if (isBullet) {
+        cleanLine = line.trim().replace(/^[\*\-]\s+/, "");
+      } else if (isNumbered) {
+        cleanLine = line.trim().replace(/^\d+\.\s+/, "");
+      }
+
+      // Parse bold **text**
+      const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
+      const parsedLine = parts.map((part, partIdx) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={partIdx} className="font-bold text-zinc-950 dark:text-zinc-50">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      });
+
+      if (isBullet) {
+        return (
+          <li key={lineIdx} className="ml-5 list-disc my-1">
+            {parsedLine}
+          </li>
+        );
+      }
+
+      if (isNumbered) {
+        const match = line.trim().match(/^(\d+)\.\s+/);
+        const num = match ? match[1] : "1";
+        return (
+          <div key={lineIdx} className="ml-5 my-1 flex gap-1.5">
+            <span className="font-bold text-zinc-900 dark:text-zinc-100">{num}.</span>
+            <span className="flex-grow">{parsedLine}</span>
+          </div>
+        );
+      }
+
+      // Render standard paragraph (handling empty line spacing)
+      return (
+        <p key={lineIdx} className={line.trim() === "" ? "h-3" : "my-0.5"}>
+          {parsedLine}
+        </p>
+      );
+    });
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 transition-colors duration-300 dark:bg-zinc-950">
       <Navbar />
@@ -251,7 +307,7 @@ export default function AssistantPage() {
                               className="mb-2 max-h-48 rounded-xl object-cover border border-zinc-200/30 dark:border-zinc-800/30"
                             />
                           )}
-                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                          <div className="space-y-1">{parseMarkdown(msg.content)}</div>
                         </div>
                       </div>
                     );
