@@ -23,7 +23,7 @@ export const wasteKnowledgeDB: WasteKnowledge[] = [
     confidenceNote: "Easily identifiable due to clarity and common shapes (e.g., water bottles)."
   },
   {
-    id: "hdpe",
+    id: "plastic-hdpe",
     name: "HDPE (Type 2)",
     category: "Plastic",
     description: "High-density polyethylene is a durable plastic used for milk jugs, shampoo bottles, and cleaning product containers.",
