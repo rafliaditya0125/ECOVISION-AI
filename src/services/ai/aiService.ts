@@ -1,5 +1,5 @@
 import { AIProvider } from "./provider";
-import { AIResult } from "@/types/ai";
+import { AIResult, ChatMessage } from "@/types/ai";
 
 /**
  * The main AI Service layer for EcoVision AI.
@@ -49,7 +49,7 @@ export class AIService {
    * @param messages - Array of chat messages.
    * @returns A promise resolving to the AI response text.
    */
-  public async chat(messages: { role: string; content: string }[]): Promise<string> {
+  public async chat(messages: ChatMessage[]): Promise<string> {
     try {
       if (!messages || messages.length === 0) {
         throw new Error("No messages provided for chat.");

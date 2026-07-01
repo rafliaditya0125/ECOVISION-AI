@@ -427,6 +427,14 @@ const dictionary: Record<string, Record<Language, string>> = {
     en: "Ask me how to recycle something...",
     id: "Tanyakan cara mendaur ulang sesuatu...",
   },
+  "assistant.uploadPhoto": {
+    en: "Attach Photo of Waste",
+    id: "Lampirkan Foto Sampah",
+  },
+  "assistant.removePhoto": {
+    en: "Remove photo",
+    id: "Hapus foto",
+  },
   "assistant.disclaimerTitle": {
     en: "Responsible AI Boundary",
     id: "Batasan AI yang Bertanggung Jawab",

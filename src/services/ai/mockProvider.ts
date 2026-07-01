@@ -1,5 +1,5 @@
 import { AIProvider } from "./provider";
-import { AIResult } from "@/types/ai";
+import { AIResult, ChatMessage } from "@/types/ai";
 
 /**
  * A mock implementation of the AIProvider.
@@ -30,11 +30,24 @@ export class MockProvider implements AIProvider {
    * @param messages - Array of chat messages.
    * @returns A promise resolving to a simulated response.
    */
-  public async chat(messages: { role: string; content: string }[]): Promise<string> {
+  public async chat(messages: ChatMessage[]): Promise<string> {
     // Simulate network latency (e.g. 1 second)
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const userMessage = messages[messages.length - 1]?.content.toLowerCase() || "";
+    const lastMessage = messages[messages.length - 1];
+
+    if (lastMessage?.image) {
+      return "Berdasarkan foto sampah yang Anda kirimkan, objek tersebut teridentifikasi sebagai botol plastik PET (Polyethylene Terephthalate).\n\n" +
+             "🌱 Kategori: Plastik Daur Ulang (Tempat Sampah Kuning)\n" +
+             "⏳ Waktu terurai: 450 tahun\n\n" +
+             "Langkah Pengelolaan:\n" +
+             "1. Kosongkan sisa cairan di dalam botol.\n" +
+             "2. Bilas sebentar dengan air bersih.\n" +
+             "3. Lepaskan tutup botol dan label plastik di sekelilingnya.\n" +
+             "4. Remas botol hingga pipih untuk menghemat ruang tempat sampah daur ulang.";
+    }
+
+    const userMessage = lastMessage?.content.toLowerCase() || "";
 
     if (userMessage.includes("plastik") || userMessage.includes("plastic")) {
       return "Botol plastik jenis PET (seperti botol air mineral) dapat didaur ulang menjadi pakaian, tas, atau botol baru. Sebelum membuangnya, pastikan Anda telah mengosongkan isinya, membilasnya, dan melepaskan label serta tutupnya.";

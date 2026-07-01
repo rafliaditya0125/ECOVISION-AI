@@ -4,33 +4,73 @@ import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/hooks/useLanguage";
-import Head from "next/head";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  image?: string; // Optional base64 data URL
 }
 
 export default function AssistantPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to the bottom of the conversation
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (textToSend: string) => {
-    if (!textToSend.trim() || isLoading) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const newMessages: Message[] = [...messages, { role: "user", content: textToSend }];
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Please select an image file (JPEG/PNG).");
+      return;
+    }
+
+    const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
+    if (file.size > MAX_SIZE_BYTES) {
+      setErrorMsg("Image size exceeds the maximum limit of 10MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAttachedImage(reader.result as string);
+      setErrorMsg(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSendMessage = async (textToSend: string, imageToSend: string | null = null) => {
+    const hasImage = !!imageToSend;
+    if (!textToSend.trim() && !hasImage) return;
+    if (isLoading) return;
+
+    // Use default text if only an image is sent
+    const finalContent = textToSend.trim() || (language === "id" 
+      ? "Identifikasi sampah ini dan jelaskan cara pengelolaannya." 
+      : "Identify this waste and explain how to manage it.");
+
+    const userMessage: Message = {
+      role: "user",
+      content: finalContent,
+      image: imageToSend || undefined,
+    };
+
+    const newMessages: Message[] = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
+    setAttachedImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setIsLoading(true);
     setErrorMsg(null);
 
@@ -58,6 +98,8 @@ export default function AssistantPage() {
   const handleClearChat = () => {
     setMessages([]);
     setErrorMsg(null);
+    setAttachedImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const suggestedQuestions = [
@@ -202,6 +244,13 @@ export default function AssistantPage() {
                               : "border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
                           }`}
                         >
+                          {msg.image && (
+                            <img
+                              src={msg.image}
+                              alt="Uploaded waste"
+                              className="mb-2 max-h-48 rounded-xl object-cover border border-zinc-200/30 dark:border-zinc-800/30"
+                            />
+                          )}
                           <p className="whitespace-pre-wrap">{msg.content}</p>
                         </div>
                       </div>
@@ -235,15 +284,74 @@ export default function AssistantPage() {
               )}
             </div>
 
+            {/* Attached Image Preview */}
+            {attachedImage && (
+              <div className="flex border-t border-zinc-100 bg-zinc-50/30 p-4 dark:border-zinc-800 dark:bg-zinc-900/10">
+                <div className="relative group">
+                  <img
+                    src={attachedImage}
+                    alt="Attached waste preview"
+                    className="h-16 w-16 rounded-xl object-cover border border-zinc-200 dark:border-zinc-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAttachedImage(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white hover:bg-red-600 shadow transition-colors cursor-pointer"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Input Bar */}
             <div className="border-t border-zinc-100 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/20">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleSendMessage(input);
+                  handleSendMessage(input, attachedImage);
                 }}
                 className="flex items-center gap-3"
               >
+                {/* Photo Attachment Button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  title={t("assistant.uploadPhoto")}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="h-5 w-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+                    />
+                  </svg>
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg,image/png,image/jpg"
+                  className="hidden"
+                />
+
                 <input
                   type="text"
                   value={input}
@@ -252,9 +360,10 @@ export default function AssistantPage() {
                   disabled={isLoading}
                   className="flex-grow rounded-full border border-zinc-200 bg-white px-5 py-3 text-xs text-zinc-800 placeholder-zinc-400 shadow-inner focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-emerald-400"
                 />
+                
                 <button
                   type="submit"
-                  disabled={!input.trim() || isLoading}
+                  disabled={(!input.trim() && !attachedImage) || isLoading}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-blue-600 text-white shadow-md shadow-emerald-500/20 hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50 transition-all duration-300 cursor-pointer"
                 >
                   <svg

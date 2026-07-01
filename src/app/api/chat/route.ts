@@ -15,6 +15,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate structure of individual messages
+    for (const msg of messages) {
+      if (!msg.role || typeof msg.content !== "string") {
+        return NextResponse.json(
+          { success: false, message: "Invalid message structure. Each message must have 'role' and 'content' fields." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Resolve the active AI provider (Gemini or Mock)
     const provider = ProviderManager.getProvider();
     const aiService = new AIService(provider);
