@@ -320,6 +320,96 @@ const dictionary: Record<string, Record<Language, string>> = {
     en: "Confidence Score",
     id: "Skor Keyakinan",
   },
+
+  // Auth & Dashboard Sprint 3 Keys
+  "nav.dashboard": {
+    en: "Dashboard",
+    id: "Dasbor",
+  },
+  "nav.login": {
+    en: "Sign In",
+    id: "Masuk",
+  },
+  "nav.logout": {
+    en: "Log Out",
+    id: "Keluar",
+  },
+  "auth.loginTitle": {
+    en: "Sign in to EcoVision AI",
+    id: "Masuk ke EcoVision AI",
+  },
+  "auth.loginSubtitle": {
+    en: "Track your environmental impact and scan history",
+    id: "Lacak dampak lingkungan dan riwayat pemindaian Anda",
+  },
+  "auth.emailLabel": {
+    en: "Email Address",
+    id: "Alamat Email",
+  },
+  "auth.passwordLabel": {
+    en: "Password",
+    id: "Kata Sandi",
+  },
+  "auth.nameLabel": {
+    en: "Full Name",
+    id: "Nama Lengkap",
+  },
+  "auth.noAccount": {
+    en: "Don't have an account? Sign Up",
+    id: "Belum punya akun? Daftar",
+  },
+  "auth.haveAccount": {
+    en: "Already have an account? Sign In",
+    id: "Sudah punya akun? Masuk",
+  },
+  "auth.registerTitle": {
+    en: "Create an Account",
+    id: "Daftar Akun Baru",
+  },
+  "auth.invalidCredentials": {
+    en: "Invalid email or password.",
+    id: "Email atau kata sandi salah.",
+  },
+  "auth.emailExists": {
+    en: "Email is already registered.",
+    id: "Email sudah terdaftar.",
+  },
+  "dashboard.title": {
+    en: "Environmental Dashboard",
+    id: "Dasbor Lingkungan",
+  },
+  "dashboard.subtitle": {
+    en: "Welcome back! Here is your custom ecological footprint savings.",
+    id: "Selamat datang kembali! Berikut data jejak penyelamatan lingkungan Anda.",
+  },
+  "dashboard.totalScanned": {
+    en: "Total Scanned",
+    id: "Total Pemindaian",
+  },
+  "dashboard.recyclingRate": {
+    en: "Recycling Rate",
+    id: "Tingkat Daur Ulang",
+  },
+  "dashboard.co2Savings": {
+    en: "CO2 Footprint Saved",
+    id: "Footprint CO2 Diselamatkan",
+  },
+  "dashboard.historyTitle": {
+    en: "Recent Scan History",
+    id: "Riwayat Pemindaian Terbaru",
+  },
+  "dashboard.noHistory": {
+    en: "No scan history recorded. Start scanning to track your impact!",
+    id: "Belum ada riwayat pemindaian. Mulai memindai untuk melacak dampak Anda!",
+  },
+  "dashboard.viewDetails": {
+    en: "View Details",
+    id: "Lihat Detail",
+  },
+  "dashboard.breakdownTitle": {
+    en: "Material Categories Breakdown",
+    id: "Rincian Kategori Material",
+  },
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {

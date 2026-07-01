@@ -11,12 +11,14 @@ import ResponsibleAICard from "@/components/ResponsibleAICard";
 import LearnMoreCard from "@/components/LearnMoreCard";
 import { getWasteKnowledge } from "@/lib/knowledge";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 
 function ResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { language, t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
 
   // Read waste ID and confidence from URL query params (e.g. /result?id=plastic-pet&confidence=96)
   const id = searchParams.get("id") ?? "unknown";
@@ -37,6 +39,32 @@ function ResultContent() {
 
   // Look up the Knowledge Engine — null means unrecognized ID (passing current language preference)
   const wasteData = getWasteKnowledge(id, language);
+
+  // Log scan event once to MySQL history if logged in
+  const [hasLogged, setHasLogged] = useState(false);
+  useEffect(() => {
+    if (isAuthenticated && user && wasteData && !hasLogged) {
+      setHasLogged(true);
+      fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wasteId: id,
+          name: wasteData.name,
+          category: wasteData.category,
+          confidence: confidence,
+          recyclable: wasteData.recyclable,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            console.log("Logged scan to history:", data.scanItem);
+          }
+        })
+        .catch((err) => console.error("Error logging scan to history:", err));
+    }
+  }, [isAuthenticated, user, wasteData, hasLogged, id, confidence]);
 
   if (!wasteData) {
     return (
@@ -79,7 +107,7 @@ function ResultContent() {
           <div className="mt-6 sm:mt-0">
             <button
               onClick={handleScanAnother}
-              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-sm ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-50 dark:ring-zinc-700 dark:hover:bg-zinc-800"
+              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-sm ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:ring-zinc-700 dark:hover:bg-zinc-800"
             >
               {t("result.scanAnother")}
             </button>

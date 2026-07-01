@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -10,6 +11,8 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [mounted, setMounted] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -133,6 +136,50 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
+
+            {/* Auth section */}
+            {isAuthenticated && user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-500 to-blue-500 text-xs font-bold text-white cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-md"
+                >
+                  {user.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 z-50">
+                    <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 mb-1">
+                      <p className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">Signed in as</p>
+                      <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">{user.name}</p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-900 transition-colors"
+                    >
+                      📊 {t("nav.dashboard")}
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setProfileOpen(false);
+                        logout();
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors cursor-pointer text-left"
+                    >
+                      🚪 {t("nav.logout")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex h-9 items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 px-5 text-xs font-semibold text-zinc-700 transition-colors dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                {t("nav.login")}
+              </Link>
+            )}
 
             <Link href="/scan" className="relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-emerald-500 to-blue-600 p-0.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/30 active:scale-95">
               <span className="relative rounded-full bg-zinc-950 px-5 py-2 transition-all duration-300 ease-in group-hover:bg-opacity-0 hover:bg-transparent">
@@ -281,6 +328,37 @@ export default function Navbar() {
           >
             {t("nav.about")}
           </a>
+
+          {/* Mobile Auth Links */}
+          {isAuthenticated && user ? (
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setIsOpen(false)}
+                className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
+              >
+                📊 {t("nav.dashboard")}
+              </Link>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  logout();
+                }}
+                className="block w-full text-left rounded-lg px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+              >
+                🚪 {t("nav.logout")}
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setIsOpen(false)}
+              className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
+            >
+              🔑 {t("nav.login")}
+            </Link>
+          )}
+
           <div className="pt-2">
             <Link
               href="/scan"
