@@ -19,11 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Omit<User, "passwordHash"> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch session on mount
-  useEffect(() => {
-    refreshSession();
-  }, []);
-
   const refreshSession = async () => {
     setIsLoading(true);
     try {
@@ -41,6 +36,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   };
+
+  // Fetch session on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refreshSession();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {

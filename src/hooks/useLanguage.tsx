@@ -410,6 +410,63 @@ const dictionary: Record<string, Record<Language, string>> = {
     en: "Material Categories Breakdown",
     id: "Rincian Kategori Material",
   },
+  // Sprint 4 AI Assistant Keys
+  "nav.assistant": {
+    en: "AI Assistant",
+    id: "Asisten AI",
+  },
+  "assistant.title": {
+    en: "AI Eco-Assistant",
+    id: "Asisten Eco-AI",
+  },
+  "assistant.subtitle": {
+    en: "Learn how to sort waste, reduce CO2, and adopt sustainable habits.",
+    id: "Pelajari cara memilah sampah, mengurangi CO2, dan menerapkan kebiasaan ramah lingkungan.",
+  },
+  "assistant.placeholder": {
+    en: "Ask me how to recycle something...",
+    id: "Tanyakan cara mendaur ulang sesuatu...",
+  },
+  "assistant.uploadPhoto": {
+    en: "Attach Photo of Waste",
+    id: "Lampirkan Foto Sampah",
+  },
+  "assistant.removePhoto": {
+    en: "Remove photo",
+    id: "Hapus foto",
+  },
+  "assistant.disclaimerTitle": {
+    en: "Responsible AI Boundary",
+    id: "Batasan AI yang Bertanggung Jawab",
+  },
+  "assistant.disclaimerText": {
+    en: "This assistant is trained exclusively on waste management, recycling, and sustainability. Answers are for educational use. Please verify with local municipal rules.",
+    id: "Asisten ini dilatih khusus untuk topik pengelolaan sampah, daur ulang, dan keberlanjutan. Jawaban bersifat edukatif. Harap verifikasi dengan peraturan daerah setempat.",
+  },
+  "assistant.suggested.title": {
+    en: "Suggested Questions",
+    id: "Pertanyaan yang Disarankan",
+  },
+  "assistant.suggested.q1": {
+    en: "How do I recycle PET bottles?",
+    id: "Bagaimana cara daur ulang botol PET?",
+  },
+  "assistant.suggested.q2": {
+    en: "How long does paper decompose?",
+    id: "Berapa lama kertas terurai?",
+  },
+  "assistant.suggested.q3": {
+    en: "What is carbon footprint?",
+    id: "Apa itu jejak karbon?",
+  },
+  "assistant.clearChat": {
+    en: "Clear Conversation",
+    id: "Bersihkan Percakapan",
+  },
+  "assistant.error": {
+    en: "Unable to reach assistant. Please try again.",
+    id: "Gagal terhubung dengan asisten. Silakan coba lagi.",
+  },
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -420,6 +477,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // Read from localStorage on mount
     const savedLang = localStorage.getItem("language") as Language | null;
     if (savedLang === "en" || savedLang === "id") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLanguageState(savedLang);
     }
     setMounted(true);

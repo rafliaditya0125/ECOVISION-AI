@@ -1,5 +1,5 @@
 import { AIProvider } from "./provider";
-import { AIResult } from "@/types/ai";
+import { AIResult, ChatMessage } from "@/types/ai";
 
 /**
  * The main AI Service layer for EcoVision AI.
@@ -39,6 +39,29 @@ export class AIService {
       return result;
     } catch (error) {
       console.error("AI Analysis failed in AIService:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generates a conversational response based on chat history.
+   * 
+   * @param messages - Array of chat messages.
+   * @returns A promise resolving to the AI response text.
+   */
+  public async chat(messages: ChatMessage[]): Promise<string> {
+    try {
+      if (!messages || messages.length === 0) {
+        throw new Error("No messages provided for chat.");
+      }
+
+      if (typeof this.provider.chat !== "function") {
+        throw new Error("Current provider does not support chat operations.");
+      }
+
+      return await this.provider.chat(messages);
+    } catch (error) {
+      console.error("AI Chat failed in AIService:", error);
       throw error;
     }
   }

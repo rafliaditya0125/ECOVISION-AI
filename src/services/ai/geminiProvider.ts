@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { AIProvider } from "./provider";
-import { AIResult } from "@/types/ai";
+import { AIResult, ChatMessage } from "@/types/ai";
 
 /**
  * All labels the AI is allowed to return.
@@ -168,6 +168,57 @@ export class GeminiProvider implements AIProvider {
       detectedLabel: label,
       confidence,
     };
+  }
+
+  public async chat(messages: ChatMessage[]): Promise<string> {
+    // Map messages history to Gemini SDK structure
+    const contents = messages.map((msg) => {
+      const parts: { text?: string; inlineData?: { data: string; mimeType: string } }[] = [{ text: msg.content }];
+
+      if (msg.image) {
+        // Parse data URL: data:image/jpeg;base64,....
+        const matches = msg.image.match(/^data:(image\/[a-zA-Z+-\.]+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const data = matches[2];
+          parts.push({
+            inlineData: {
+              data,
+              mimeType,
+            },
+          });
+        }
+      }
+
+      return {
+        role: msg.role === "assistant" ? "model" : "user",
+        parts,
+      };
+    });
+
+    try {
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents,
+        config: {
+          systemInstruction: `You are the EcoVision AI Assistant, a virtual assistant expert in waste sorting, recycling, environmental conservation, and sustainability.
+Your mission is to help users manage waste responsibly, explain recycling techniques, and provide environmental educational context.
+
+GUIDELINES:
+- Keep your tone friendly, encouraging, and informative.
+- Answer in the same language the user is speaking (primarily Indonesian or English).
+- When a user uploads an image/photo of a waste item, analyze the image to identify what kind of waste it is, classify its material, state if it's recyclable, and provide clear sorting and management guidelines.
+- Safety Boundary (Responsible AI): You must ONLY answer questions related to waste management, recycling, green technology, environmental statistics, climate change, or sustainability. If a user asks about off-topic queries (e.g., general history, mathematics, programming, general pop culture, etc.), you must politely decline and guide the conversation back to environmental topics.
+- Example decline response: "Maaf, sebagai asisten EcoVision AI, saya hanya dapat menjawab pertanyaan yang berhubungan dengan pengelolaan sampah, daur ulang, dan kelestarian lingkungan. Ada yang bisa saya bantu terkait topik tersebut?"
+- Never claim 100% accuracy. If asked for specific regional guidelines, remind the user to verify with their local municipal guidelines.`,
+        },
+      });
+
+      return response.text ?? "";
+    } catch (error) {
+      console.error("GeminiProvider: Chat generation failed:", error);
+      throw new Error(`GeminiProvider: Chat failed — ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 }
 
