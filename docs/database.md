@@ -1,18 +1,28 @@
-# Database & Migrations
+# Database & Penyimpanan Data
 
-Dokumentasi skema database MySQL dan sistem migrasi TypeScript yang digunakan oleh EcoVision AI.
+Dokumentasi skema database MySQL, sistem migrasi TypeScript, dan mode penyimpanan alternatif (localStorage) yang digunakan oleh EcoVision AI.
 
 ---
 
-## Prasyarat
+## Dua Mode Penyimpanan
+
+EcoVision AI mendukung dua mode penyimpanan yang dapat diatur via environment variable `NEXT_PUBLIC_DB_STORAGE`:
+
+| Mode | Variabel | Login Diperlukan | Teknologi | Cocok untuk |
+|---|---|---|---|---|
+| **MySQL** | `mysql` | ✅ Ya | MySQL 8+ | Produksi, pengembangan penuh |
+| **localStorage** | `localstorage` | ❌ Tidak | Browser localStorage | Demo, offline, tanpa MySQL |
+
+---
+
+## Mode MySQL
+
+### Prasyarat
 
 - MySQL 8+ berjalan di localhost
-- Database `ecovision_db` sudah dibuat (dibuat otomatis saat migrasi pertama)
 - Konfigurasi koneksi di `.env.local` (lihat [environment.md](environment.md))
 
----
-
-## Menjalankan Migrasi
+### Menjalankan Migrasi
 
 ```bash
 npm run db:migrate
@@ -27,18 +37,18 @@ Script ini (`scripts/migrate.ts`, dijalankan via `tsx`) akan:
 
 ---
 
-## Skema Tabel
+## Skema Tabel (MySQL)
 
 ### `users`
 Dibuat oleh: `database/migrations/001_create_users_and_history.ts`
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `id` | `CHAR(36)` PK | UUID v4 |
-| `name` | `VARCHAR(255)` | Nama tampilan pengguna |
-| `email` | `VARCHAR(255)` UNIQUE | Email login |
+| `id` | `VARCHAR(50)` PK | ID unik pengguna |
+| `name` | `VARCHAR(100)` | Nama tampilan |
+| `email` | `VARCHAR(100)` UNIQUE | Email login |
 | `password_hash` | `VARCHAR(255)` | Hash bcrypt dari password |
-| `created_at` | `DATETIME` | Waktu registrasi |
+| `created_at` | `TIMESTAMP` | Waktu registrasi |
 
 ---
 
@@ -47,14 +57,14 @@ Dibuat oleh: `database/migrations/001_create_users_and_history.ts`
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `id` | `CHAR(36)` PK | UUID v4 |
-| `user_id` | `CHAR(36)` FK | Referensi ke `users.id` (CASCADE DELETE) |
-| `waste_id` | `VARCHAR(100)` | ID kategori sampah (misalnya `plastic-pet`) |
-| `name` | `VARCHAR(255)` | Nama sampah yang terdeteksi |
-| `category` | `VARCHAR(100)` | Kategori umum (misalnya `plastic`) |
+| `id` | `VARCHAR(50)` PK | ID unik scan |
+| `user_id` | `VARCHAR(50)` FK | Referensi ke `users.id` (CASCADE DELETE) |
+| `waste_id` | `VARCHAR(50)` | ID kategori sampah (misalnya `plastic-pet`) |
+| `name` | `VARCHAR(100)` | Nama sampah yang terdeteksi |
+| `category` | `VARCHAR(50)` | Kategori umum (misalnya `plastic`) |
 | `confidence` | `INT` | Confidence score 0–100 |
-| `scanned_at` | `DATETIME` | Waktu scan |
-| `co2_offset` | `DECIMAL(10,4)` | Estimasi CO₂ offset (kg) |
+| `scanned_at` | `TIMESTAMP` | Waktu scan |
+| `co2_offset` | `DECIMAL(5,2)` | Estimasi CO₂ offset (kg) |
 | `recyclable` | `TINYINT(1)` | 1 jika dapat didaur ulang |
 
 ---
@@ -64,8 +74,8 @@ Dibuat oleh: `database/migrations/002_create_chats.ts`
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `id` | `CHAR(36)` PK | UUID v4 sesi percakapan |
-| `user_id` | `CHAR(36)` FK | Referensi ke `users.id` (CASCADE DELETE) |
+| `id` | `VARCHAR(50)` PK | ID unik sesi percakapan |
+| `user_id` | `VARCHAR(50)` FK | Referensi ke `users.id` (CASCADE DELETE) |
 | `title` | `VARCHAR(255)` | Judul sesi (dari pesan pertama user) |
 | `created_at` | `DATETIME` | Waktu sesi dibuat |
 | `updated_at` | `DATETIME` | Waktu pesan terakhir |
@@ -77,16 +87,17 @@ Dibuat oleh: `database/migrations/002_create_chats.ts`
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `id` | `CHAR(36)` PK | UUID v4 pesan |
-| `session_id` | `CHAR(36)` FK | Referensi ke `chat_sessions.id` (CASCADE DELETE) |
+| `id` | `INT` PK AUTO_INCREMENT | ID pesan |
+| `session_id` | `VARCHAR(50)` FK | Referensi ke `chat_sessions.id` (CASCADE DELETE) |
 | `role` | `ENUM('user','assistant')` | Pengirim pesan |
 | `content` | `TEXT` | Isi pesan |
+| `image` | `MEDIUMTEXT` | Base64 gambar (opsional) |
 | `created_at` | `DATETIME` | Waktu pesan |
 
 ---
 
 ### `_migrations`
-Tabel internal untuk tracking migrasi yang sudah dijalankan.
+Tabel internal untuk tracking migrasi.
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
@@ -95,19 +106,51 @@ Tabel internal untuk tracking migrasi yang sudah dijalankan.
 
 ---
 
-## Helper Database (`src/lib/db.ts`)
+## Mode localStorage (Guest Mode)
 
-File ini berisi semua fungsi query yang digunakan oleh API routes:
+Pada mode ini, **tidak dibutuhkan MySQL sama sekali**. Semua data disimpan langsung di browser pengguna via browser `localStorage`.
+
+**File:** `src/lib/clientStorage.ts`
+
+> [!WARNING]
+> Data di mode `localstorage` bersifat lokal per browser. Jika pengguna menghapus data browser atau membuka di browser/perangkat lain, data tidak akan tersedia.
+
+### Struktur Data di Browser
+
+| localStorage Key | Isi | Tipe |
+|---|---|---|
+| `ecovision_scan_history` | Semua riwayat scan | `LocalScanItem[]` |
+| `ecovision_chat_sessions` | Daftar sesi percakapan | `LocalChatSession[]` |
+| `ecovision_chat_messages_<sessionId>` | Pesan per sesi | `LocalChatMessage[]` |
+
+### Fungsi yang Tersedia
 
 | Fungsi | Deskripsi |
 |---|---|
-| `getConnection()` | Membuat koneksi MySQL baru dari env config |
-| `getUserByEmail(email)` | Ambil user berdasarkan email |
-| `getUserByToken(token)` | Decode JWT + ambil user |
-| `createUser(name, email, hash)` | Buat akun baru |
-| `saveScanHistory(userId, item)` | Simpan hasil scan ke database |
-| `getScanHistory(userId)` | Ambil semua riwayat scan user |
-| `getStats(userId)` | Hitung statistik agregat scan |
+| `isLocalStorageMode()` | Cek apakah mode aktif adalah `localstorage` |
+| `getScanHistory()` | Ambil semua riwayat scan dari localStorage |
+| `saveScan(item)` | Simpan hasil scan ke localStorage |
+| `getStats()` | Hitung statistik agregat dari data localStorage |
+| `getChatSessions()` | Ambil daftar sesi chat dari localStorage |
+| `getChatMessages(sessionId)` | Ambil pesan dalam satu sesi |
+| `saveChatMessage(sessionId, role, content)` | Simpan pesan chat; auto-buat sesi baru jika perlu |
+
+---
+
+## Helper Database MySQL (`src/lib/db.ts`)
+
+Fungsi-fungsi query untuk mode MySQL:
+
+| Fungsi | Deskripsi |
+|---|---|
+| `getPool()` | Inisialisasi dan kembalikan MySQL connection pool |
+| `getUsers()` | Ambil semua user (admin) |
+| `saveUser(user)` | Buat akun baru |
+| `findUserByEmail(email)` | Cari user berdasarkan email |
+| `findUserById(id)` | Cari user berdasarkan ID |
+| `getUserHistory(userId)` | Ambil riwayat scan user |
+| `saveScan(userId, item)` | Simpan hasil scan ke MySQL |
+| `getUserStats(userId)` | Hitung statistik agregat scan |
 | `getChatSessions(userId)` | Ambil daftar sesi chat user |
 | `getChatMessages(sessionId)` | Ambil semua pesan dalam satu sesi |
-| `saveChatMessage(sessionId, token, role, content)` | Simpan pesan & auto-buat sesi baru jika perlu |
+| `saveChatMessage(sessionId, userId, role, content)` | Simpan pesan & auto-buat sesi baru jika perlu |

@@ -26,8 +26,8 @@ Kemudian isi nilai setiap variabel sesuai panduan di bawah ini.
 
 | Variabel | Scope | Wajib | Deskripsi |
 |---|---|---|---|
-| `GEMINI_API_KEY` | Server-side | Ya (jika `gemini`) | API key Gemini untuk server fallback |
-| `NEXT_PUBLIC_GEMINI_API_KEY` | Client + Server | Ya (jika `gemini`) | API key yang dikirim via header HTTP `x-api-key` dari browser |
+| `GEMINI_API_KEY` | Server-side | Ya (jika `gemini`) | API key server sebagai fallback jika header `x-api-key` tidak ada |
+| `NEXT_PUBLIC_GEMINI_API_KEY` | Client + Server | Ya (jika `gemini`) | API key yang dikirim via header HTTP `x-api-key` dari browser ke setiap request |
 
 **Cara mendapatkan API Key:**
 1. Buka [https://aistudio.google.com/](https://aistudio.google.com/)
@@ -39,9 +39,9 @@ Kemudian isi nilai setiap variabel sesuai panduan di bawah ini.
 - `GEMINI_API_KEY` → Hanya tersedia di server Node.js. Digunakan sebagai *fallback* jika header `x-api-key` tidak ada dalam request.
 - `NEXT_PUBLIC_GEMINI_API_KEY` → Dibundel ke browser. Dibaca oleh `src/lib/apiKey.ts` dan dikirim ke server melalui header HTTP `x-api-key` pada setiap request ke `/api/analyze` dan `/api/chat`.
 
-**Override API key di runtime (tanpa mengubah file):**
+**Override API key saat runtime (tanpa mengubah file .env):**
 
-Buka browser DevTools → Console, lalu jalankan:
+Buka browser DevTools → Console, jalankan:
 ```javascript
 localStorage.setItem("gemini_api_key", "API_KEY_ANDA");
 location.reload();
@@ -51,11 +51,11 @@ location.reload();
 
 ---
 
-### 2. AI Provider Selection
+### 2. Pilihan AI Provider
 
 | Variabel | Nilai | Default | Deskripsi |
 |---|---|---|---|
-| `NEXT_PUBLIC_AI_PROVIDER` | `gemini` / `mock` | `mock` | Menentukan backend AI yang digunakan |
+| `NEXT_PUBLIC_AI_PROVIDER` | `gemini` / `mock` | `mock` | Menentukan backend AI yang digunakan untuk klasifikasi gambar |
 
 | Nilai | Keterangan |
 |---|---|
@@ -64,7 +64,10 @@ location.reload();
 
 ---
 
-### 3. MySQL Database
+### 3. Konfigurasi Database MySQL
+
+> [!NOTE]
+> Variabel ini hanya diperlukan jika `NEXT_PUBLIC_DB_STORAGE=mysql` (lihat bagian 4).
 
 | Variabel | Default | Deskripsi |
 |---|---|---|
@@ -81,8 +84,37 @@ npm run db:migrate
 
 ---
 
+### 4. Provider Penyimpanan Data (Storage Mode)
+
+| Variabel | Nilai | Default | Deskripsi |
+|---|---|---|---|
+| `NEXT_PUBLIC_DB_STORAGE` | `mysql` / `localstorage` | `mysql` | Menentukan di mana data pengguna disimpan |
+
+| Nilai | Login Diperlukan | Penyimpanan | Keterangan |
+|---|---|---|---|
+| `mysql` | ✅ Ya | MySQL server | Mode penuh. Data tersimpan di database. |
+| `localstorage` | ❌ Tidak (Guest Mode) | Browser localStorage | Mode tamu. Data tersimpan di browser pengguna. Data hilang jika localStorage di-clear. |
+
+**Perbedaan kedua mode:**
+
+#### Mode `mysql` (Default)
+- Pengguna harus login/register untuk mengakses Dashboard dan riwayat
+- Semua data tersinkronisasi via MySQL — bisa diakses dari perangkat mana pun setelah login
+- Membutuhkan MySQL 8+ yang berjalan dan konfigurasi variabel bagian 3
+
+#### Mode `localstorage` (Guest Mode)
+- Tidak perlu login/register — Dashboard langsung dapat diakses
+- Riwayat scan disimpan di `localStorage` browser dengan key `ecovision_scan_history`
+- Riwayat chat disimpan per sesi dengan key `ecovision_chat_messages_<sessionId>`
+- Navbar menyembunyikan link Login/Register dan menampilkan Dashboard langsung
+- Data **tidak tersinkronisasi** antar perangkat atau browser
+- Cocok untuk demo, lingkungan tanpa MySQL, atau penggunaan offline
+
+---
+
 ## Contoh `.env.local` Lengkap
 
+### Untuk Mode MySQL (produksi/pengembangan penuh)
 ```env
 # Gemini API Keys
 GEMINI_API_KEY=AQ.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -97,4 +129,27 @@ MYSQL_USER=root
 MYSQL_PASSWORD=password_saya
 MYSQL_DATABASE=ecovision_db
 MYSQL_PORT=3306
+
+# Storage Mode
+NEXT_PUBLIC_DB_STORAGE=mysql
+```
+
+### Untuk Mode localStorage (demo/offline)
+```env
+# Gemini API Keys
+GEMINI_API_KEY=AQ.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+NEXT_PUBLIC_GEMINI_API_KEY=AQ.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# AI Provider
+NEXT_PUBLIC_AI_PROVIDER=gemini
+
+# MySQL (tidak digunakan, bisa dikosongkan)
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=ecovision_db
+MYSQL_PORT=3306
+
+# Storage Mode — Guest mode tanpa MySQL
+NEXT_PUBLIC_DB_STORAGE=localstorage
 ```

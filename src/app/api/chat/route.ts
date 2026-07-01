@@ -35,12 +35,13 @@ export async function POST(req: NextRequest) {
     // Call chat service
     const responseText = await aiService.chat(messages);
 
-    // Persistence: If user is logged in, save conversation history
+    // Persistence: Only save to DB in MySQL mode. In localStorage mode, the client handles persistence.
+    const isLocalMode = process.env.NEXT_PUBLIC_DB_STORAGE?.toLowerCase() === "localstorage";
     const cookieStore = await cookies();
     const token = cookieStore.get("session_token")?.value;
     let finalSessionId = sessionId;
 
-    if (token) {
+    if (!isLocalMode && token) {
       const lastUserMsg = messages[messages.length - 1];
       if (lastUserMsg && lastUserMsg.role === "user") {
         try {
