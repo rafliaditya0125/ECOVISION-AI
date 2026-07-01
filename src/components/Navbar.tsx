@@ -24,7 +24,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-emerald-500 to-blue-500 text-white shadow-md shadow-emerald-500/25">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -44,24 +44,24 @@ export default function Navbar() {
             <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-xl font-bold tracking-tight text-transparent dark:from-emerald-400 dark:to-blue-400">
               EcoVision AI
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex md:items-center md:gap-8">
             <a
-              href="#home"
+              href="/#home"
               className="text-sm font-medium text-zinc-600 transition-colors hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
             >
               {t("nav.home")}
             </a>
             <a
-              href="#features"
+              href="/#features"
               className="text-sm font-medium text-zinc-600 transition-colors hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
             >
               {t("nav.features")}
             </a>
             <a
-              href="#about"
+              href="/#about"
               className="text-sm font-medium text-zinc-600 transition-colors hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
             >
               {t("nav.about")}
@@ -261,21 +261,21 @@ export default function Navbar() {
       >
         <div className="space-y-1 px-4 pb-4 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-950/95">
           <a
-            href="#home"
+            href="/#home"
             onClick={() => setIsOpen(false)}
             className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
           >
             {t("nav.home")}
           </a>
           <a
-            href="#features"
+            href="/#features"
             onClick={() => setIsOpen(false)}
             className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
           >
             {t("nav.features")}
           </a>
           <a
-            href="#about"
+            href="/#about"
             onClick={() => setIsOpen(false)}
             className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
           >
