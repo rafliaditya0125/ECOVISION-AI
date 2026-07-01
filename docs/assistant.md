@@ -12,12 +12,12 @@ AI Eco-Assistant adalah chatbot interaktif yang membantu pengguna mempelajari ca
 - Jawab pertanyaan tentang sampah, daur ulang, dan lingkungan
 - Analisis gambar yang diupload langsung di chat (multimodal)
 - Render Markdown pada respons AI (bold, list, heading)
-- Simpan seluruh percakapan ke database jika user login
+- Simpan seluruh percakapan (MySQL mode: ke database; localStorage mode: ke browser)
 - Lanjutkan percakapan sebelumnya dari halaman Dashboard
 
 ---
 
-## Halaman & Komponen
+## Halaman
 
 | File | Peran |
 |---|---|
@@ -36,7 +36,7 @@ AI Eco-Assistant adalah chatbot interaktif yang membantu pengguna mempelajari ca
 
 ### Render Markdown
 
-Respons Gemini sering mengandung format Markdown (`**bold**`, `# Heading`, `- list`). Fungsi `renderMarkdown()` di `page.tsx` mengurai dan mengonversinya ke HTML:
+Respons Gemini sering mengandung format Markdown. Fungsi `parseMarkdown()` di `page.tsx` mengurai dan mengonversinya ke HTML:
 
 | Sintaks Markdown | Output HTML |
 |---|---|
@@ -48,28 +48,34 @@ Respons Gemini sering mengandung format Markdown (`**bold**`, `# Heading`, `- li
 
 ### Upload Gambar di Chat
 
-Pengguna dapat melampirkan gambar ke pesan. Alurnya:
-1. User klik ikon 📎 → pilih file gambar
+Pengguna dapat melampirkan gambar ke pesan:
+1. Klik ikon 📎 → pilih file gambar
 2. Thumbnail tampil di area input
 3. Saat dikirim: gambar dikonversi ke base64 dan disertakan dalam payload ke `/api/chat`
 4. Gemini menganalisis gambar bersama teks pertanyaan
 
-### Persistensi Percakapan
+---
 
-Jika user sedang login:
-1. Setiap pasangan pesan (user + assistant) disimpan ke tabel `chat_messages` via `saveChatMessage()`
-2. Sesi baru otomatis dibuat saat pesan pertama dikirim, dengan judul = 50 karakter pertama dari pesan user
-3. `session_id` dikembalikan oleh API dan disimpan di state React `currentSessionId`
-4. URL browser diperbarui ke `/assistant?session=<id>` menggunakan `window.history.pushState()` (tanpa full reload)
+## Persistensi Percakapan
+
+| Mode | Cara Simpan | Cara Load |
+|---|---|---|
+| **MySQL** | API `/api/chat` menyimpan pesan ke database via `saveChatMessage()` | `GET /api/chat/sessions?id=<sessionId>` |
+| **localStorage** | `saveChatMessage()` dari `src/lib/clientStorage.ts` disimpan di browser | `getChatMessages(sessionId)` dari clientStorage |
+
+Di kedua mode:
+- Sesi baru otomatis dibuat saat pesan pertama dikirim, dengan judul = 40 karakter pertama dari pesan user
+- `session_id` disimpan di state React `currentSessionId`
+- URL browser diperbarui ke `/assistant?session=<id>` menggunakan `window.history.pushState()` (tanpa full reload)
 
 ### Lanjut Percakapan (Resume)
 
-Dari halaman Dashboard, user dapat klik **"Lanjutkan Percakapan"** pada sesi chat sebelumnya:
+Dari halaman Dashboard, klik **"Lanjutkan Percakapan"**:
 1. Link mengarah ke `/assistant?session=<sessionId>`
-2. Saat halaman dimuat, `useEffect` membaca query parameter `?session=`
-3. Request `GET /api/chat/sessions?id=<sessionId>` mengambil semua pesan historis
-4. Pesan ditampilkan di UI seolah-olah percakapan baru saja dimulai
-5. User dapat melanjutkan dari titik percakapan terakhir
+2. Halaman membaca query parameter `?session=`
+3. Di mode MySQL: `GET /api/chat/sessions?id=` mengambil pesan historis
+4. Di mode localStorage: `getChatMessages(sessionId)` membaca dari browser
+5. Pesan tampil di UI dan percakapan dapat dilanjutkan
 
 ---
 
@@ -77,18 +83,18 @@ Dari halaman Dashboard, user dapat klik **"Lanjutkan Percakapan"** pada sesi cha
 
 | State | Tipe | Deskripsi |
 |---|---|---|
-| `messages` | `Message[]` | Array seluruh pesan dalam sesi |
+| `messages` | `Message[]` | Array seluruh pesan dalam sesi aktif |
 | `input` | `string` | Teks input yang sedang diketik |
 | `isLoading` | `boolean` | Menunggu respons Gemini |
 | `errorMsg` | `string \| null` | Pesan error |
 | `currentSessionId` | `string \| null` | ID sesi yang aktif |
-| `attachedImage` | `File \| null` | Gambar yang dilampirkan ke pesan berikutnya |
+| `attachedImage` | `string \| null` | Base64 gambar yang dilampirkan |
 
 ---
 
 ## System Prompt
 
-Gemini dikonfigurasi dengan system prompt yang menekankan peran sebagai konsultan lingkungan:
+Gemini dikonfigurasi dengan system prompt eco-consultant:
 
 > "You are EcoVision AI, a friendly and knowledgeable eco-assistant. Help users understand waste sorting, recycling methods, and environmental impact. Always provide actionable advice and educational information about sustainability. Respond in the same language as the user."
 
@@ -96,7 +102,9 @@ Gemini dikonfigurasi dengan system prompt yang menekankan peran sebagai konsulta
 
 ## API yang Digunakan
 
-| Endpoint | Metode | Kapan |
+| Endpoint | Mode | Kapan |
 |---|---|---|
-| `POST /api/chat` | Setiap kirim pesan | Mendapat respons AI + simpan ke DB |
-| `GET /api/chat/sessions?id=` | Saat load sesi lama | Muat riwayat percakapan |
+| `POST /api/chat` | Keduanya | Mendapat respons Gemini |
+| `GET /api/chat/sessions?id=` | MySQL | Muat riwayat percakapan |
+| `clientStorage.getChatMessages()` | localStorage | Muat riwayat percakapan |
+| `clientStorage.saveChatMessage()` | localStorage | Simpan pesan setelah respons diterima |

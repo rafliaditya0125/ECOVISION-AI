@@ -12,6 +12,7 @@ import LearnMoreCard from "@/components/LearnMoreCard";
 import { getWasteKnowledge } from "@/lib/knowledge";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { isLocalStorageMode, saveScan } from "@/lib/clientStorage";
 import Link from "next/link";
 
 function ResultContent() {
@@ -40,10 +41,23 @@ function ResultContent() {
   // Look up the Knowledge Engine — null means unrecognized ID (passing current language preference)
   const wasteData = getWasteKnowledge(id, language);
 
-  // Log scan event once to MySQL history if logged in
+  // Log scan event — localStorage mode saves directly in browser; MySQL mode POSTs to API
   const [hasLogged, setHasLogged] = useState(false);
   useEffect(() => {
-    if (isAuthenticated && user && wasteData && !hasLogged) {
+    if (hasLogged || !wasteData) return;
+
+    if (isLocalStorageMode()) {
+      // Guest mode: save directly to browser localStorage
+      setHasLogged(true);
+      saveScan({
+        wasteId: id,
+        name: wasteData.name,
+        category: wasteData.category,
+        confidence,
+        recyclable: wasteData.recyclable,
+      });
+    } else if (isAuthenticated && user) {
+      // MySQL mode: POST to API route
       setHasLogged(true);
       fetch("/api/history", {
         method: "POST",

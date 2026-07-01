@@ -13,6 +13,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const isLocalMode = process.env.NEXT_PUBLIC_DB_STORAGE?.toLowerCase() === "localstorage";
 
   useEffect(() => {
     setMounted(true);
@@ -150,7 +151,15 @@ export default function Navbar() {
             </button>
 
             {/* Auth section */}
-            {isAuthenticated && user ? (
+            {isLocalMode ? (
+              // localStorage / Guest mode: show Dashboard link directly, no login needed
+              <Link
+                href="/dashboard"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 px-4 text-xs font-semibold text-emerald-700 transition-colors dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
+              >
+                📊 {t("nav.dashboard")}
+              </Link>
+            ) : isAuthenticated && user ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
@@ -356,7 +365,16 @@ export default function Navbar() {
           </Link>
 
           {/* Mobile Auth Links */}
-          {isAuthenticated && user ? (
+          {isLocalMode ? (
+            // localStorage / Guest mode: direct dashboard access
+            <Link
+              href="/dashboard"
+              onClick={() => setIsOpen(false)}
+              className="block rounded-lg px-3 py-2 text-base font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
+            >
+              📊 {t("nav.dashboard")}
+            </Link>
+          ) : isAuthenticated && user ? (
             <>
               <Link
                 href="/dashboard"

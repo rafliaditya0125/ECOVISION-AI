@@ -8,31 +8,48 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import { ScanHistoryItem, UserStats, ChatSession } from "@/lib/db";
+import {
+  isLocalStorageMode,
+  getScanHistory,
+  getStats,
+  getChatSessions,
+  LocalScanItem,
+  LocalStats,
+  LocalChatSession,
+} from "@/lib/clientStorage";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { t, language } = useLanguage();
 
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [history, setHistory] = useState<ScanHistoryItem[]>([]);
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const isLocalMode = isLocalStorageMode();
+
+  const [stats, setStats] = useState<UserStats | LocalStats | null>(null);
+  const [history, setHistory] = useState<ScanHistoryItem[] | LocalScanItem[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[] | LocalChatSession[]>([]);
   const [activeTab, setActiveTab] = useState<"scan" | "chat">("scan");
   const [dataLoading, setDataLoading] = useState(true);
 
-  // Authenticate session redirection
+  // Authenticate session redirection — only in MySQL mode
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!isLocalMode && !authLoading && !isAuthenticated) {
       router.push("/login");
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router, isLocalMode]);
 
-  // Fetch stats and history when user is authenticated
+  // Load data depending on storage mode
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isLocalMode) {
+      // Guest mode: read directly from browser localStorage
+      setStats(getStats());
+      setHistory(getScanHistory());
+      setChatSessions(getChatSessions());
+      setDataLoading(false);
+    } else if (isAuthenticated && user) {
       fetchDashboardData();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isLocalMode]);
 
   const fetchDashboardData = async () => {
     setDataLoading(true);
@@ -58,7 +75,7 @@ export default function DashboardPage() {
   };
 
   // Render loading state
-  if (authLoading || (isAuthenticated && dataLoading)) {
+  if (!isLocalMode && (authLoading || (isAuthenticated && dataLoading))) {
     return (
       <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-900/40 justify-between">
         <Navbar />
@@ -73,8 +90,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Fallback for redirecting state
-  if (!isAuthenticated) {
+  // Fallback for redirecting state (MySQL mode only)
+  if (!isLocalMode && !isAuthenticated) {
     return null;
   }
 

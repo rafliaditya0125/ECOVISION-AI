@@ -5,6 +5,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getClientApiKey } from "@/lib/apiKey";
+import {
+  isLocalStorageMode,
+  getChatMessages,
+  saveChatMessage as localSaveChatMessage,
+} from "@/lib/clientStorage";
 
 interface Message {
   role: "user" | "assistant";
@@ -38,18 +43,31 @@ export default function AssistantPage() {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/chat/sessions?id=${sessionId}`);
-      const data = await res.json();
-      if (data.success) {
+      if (isLocalStorageMode()) {
+        // Guest mode: load from browser localStorage
+        const localMsgs = getChatMessages(sessionId);
         setMessages(
-          data.messages.map((m: { role: "user" | "assistant"; content: string; image?: string }) => ({
+          localMsgs.map((m) => ({
             role: m.role,
             content: m.content,
-            image: m.image || undefined,
+            image: m.image,
           }))
         );
       } else {
-        setErrorMsg("Failed to load conversation history.");
+        // MySQL mode: fetch from API
+        const res = await fetch(`/api/chat/sessions?id=${sessionId}`);
+        const data = await res.json();
+        if (data.success) {
+          setMessages(
+            data.messages.map((m: { role: "user" | "assistant"; content: string; image?: string }) => ({
+              role: m.role,
+              content: m.content,
+              image: m.image || undefined,
+            }))
+          );
+        } else {
+          setErrorMsg("Failed to load conversation history.");
+        }
       }
     } catch (err) {
       console.error("Load session history error:", err);
@@ -126,8 +144,23 @@ export default function AssistantPage() {
 
       const data = await res.json();
       if (data.success) {
-        setMessages([...newMessages, { role: "assistant", content: data.response }]);
-        if (data.sessionId && data.sessionId !== currentSessionId) {
+        const assistantMsg: Message = { role: "assistant", content: data.response };
+        setMessages([...newMessages, assistantMsg]);
+
+        if (isLocalStorageMode()) {
+          // Guest mode: save both messages to browser localStorage
+          const { sessionId: sid } = localSaveChatMessage(
+            currentSessionId,
+            "user",
+            finalContent,
+            imageToSend || undefined
+          );
+          localSaveChatMessage(sid, "assistant", data.response);
+          if (sid !== currentSessionId) {
+            setCurrentSessionId(sid);
+            window.history.pushState({}, "", `/assistant?session=${sid}`);
+          }
+        } else if (data.sessionId && data.sessionId !== currentSessionId) {
           setCurrentSessionId(data.sessionId);
           window.history.pushState({}, "", `/assistant?session=${data.sessionId}`);
         }
