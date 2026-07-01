@@ -16,15 +16,17 @@ export class ProviderManager {
    * - "gemini": Returns GeminiProvider
    * - default: Falls back to MockProvider for safety in development
    * 
+   * @param apiKey - Optional API key forwarded from the client via HTTP header.
+   *                 If provided, overrides the server-side environment variable.
    * @returns An instance of a class implementing the AIProvider interface.
    */
-  public static getProvider(): AIProvider {
+  public static getProvider(apiKey?: string): AIProvider {
     // Access environment variable safely
     const providerType = process.env.NEXT_PUBLIC_AI_PROVIDER?.toLowerCase() || "mock";
 
     switch (providerType) {
       case "gemini":
-        return new GeminiProvider();
+        return new GeminiProvider(apiKey);
       
       case "mock":
       default:

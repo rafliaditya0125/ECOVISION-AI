@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getClientApiKey } from "@/lib/apiKey";
 
 interface Message {
   role: "user" | "assistant";
@@ -113,7 +114,10 @@ export default function AssistantPage() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-api-key": getClientApiKey(),
+        },
         body: JSON.stringify({
           messages: newMessages,
           sessionId: currentSessionId,

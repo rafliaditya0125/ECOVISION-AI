@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/hooks/useLanguage";
 import Link from "next/link";
+import { getClientApiKey } from "@/lib/apiKey";
 
 interface TestItem {
   id: string;
@@ -114,6 +115,9 @@ export default function TestingPage() {
         const res = await fetch("/api/analyze", {
           method: "POST",
           body: formData,
+          headers: {
+            "x-api-key": getClientApiKey(),
+          },
         });
 
         const data = await res.json();
