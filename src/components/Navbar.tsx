@@ -75,6 +75,12 @@ export default function Navbar() {
             >
               {t("nav.assistant")}
             </Link>
+            <Link
+              href="/testing"
+              className="text-sm font-medium text-zinc-600 transition-colors hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
+            >
+              {t("nav.testing")}
+            </Link>
           </div>
 
           {/* Action & Theme Toggle Button */}
@@ -340,6 +346,13 @@ export default function Navbar() {
             className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
           >
             {t("nav.assistant")}
+          </Link>
+          <Link
+            href="/testing"
+            onClick={() => setIsOpen(false)}
+            className="block rounded-lg px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-emerald-600 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-emerald-400"
+          >
+            {t("nav.testing")}
           </Link>
 
           {/* Mobile Auth Links */}

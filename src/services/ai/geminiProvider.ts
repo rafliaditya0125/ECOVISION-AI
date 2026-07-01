@@ -70,12 +70,13 @@ function clampConfidence(value: number): number {
 export class GeminiProvider implements AIProvider {
   private client: GoogleGenAI;
 
-  constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
+  constructor(headerApiKey?: string) {
+    // Prefer the header-provided key, then fall back to the server env variable
+    const apiKey = headerApiKey || process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       throw new Error(
-        "GeminiProvider: GEMINI_API_KEY environment variable is not set."
+        "GeminiProvider: No API key supplied. Set GEMINI_API_KEY in .env.local or pass it via x-api-key header."
       );
     }
 

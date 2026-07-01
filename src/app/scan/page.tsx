@@ -8,6 +8,7 @@ import UploadZone from "@/components/UploadZone";
 import ImagePreview from "@/components/ImagePreview";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getClientApiKey } from "@/lib/apiKey";
 
 export default function ScanPage() {
   const router = useRouter();
@@ -58,6 +59,9 @@ export default function ScanPage() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         body: formData,
+        headers: {
+          "x-api-key": getClientApiKey(),
+        },
       });
 
       const data = await response.json();

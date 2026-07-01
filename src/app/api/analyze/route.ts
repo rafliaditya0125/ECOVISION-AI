@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Resolve the active AI provider via ProviderManager (Factory Pattern)
-    const provider = ProviderManager.getProvider();
+    const apiKey = req.headers.get("x-api-key") || undefined;
+    const provider = ProviderManager.getProvider(apiKey);
     const aiService = new AIService(provider);
 
     // Run analysis through the AI Service layer
