@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ResultCard from "@/components/ResultCard";
@@ -15,6 +15,34 @@ import { useAuth } from "@/hooks/useAuth";
 import { isLocalStorageMode, saveScan } from "@/lib/clientStorage";
 import Link from "next/link";
 
+async function compressImageBase64(base64Str: string, maxWidth = 300, quality = 0.5): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        return resolve(base64Str);
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = (err) => reject(err);
+    img.src = base64Str;
+  });
+}
+
 function ResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -24,13 +52,20 @@ function ResultContent() {
   // Read waste ID and confidence from URL query params (e.g. /result?id=plastic-pet&confidence=96)
   const id = searchParams.get("id") ?? "unknown";
   const confidence = Number(searchParams.get("confidence") ?? 0);
+  const isHistoryView = searchParams.get("history") === "1";
 
   // Retrieve the uploaded image preview URL from sessionStorage (client-side only)
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   useEffect(() => {
-    const stored = sessionStorage.getItem("uploadedImage");
-    setPreviewImage(stored);
-  }, []);
+    if (isHistoryView) {
+      const historyImg = sessionStorage.getItem("historyImage");
+      console.log("Loading history image from sessionStorage:", historyImg ? historyImg.substring(0, 50) + "..." : "null");
+      setPreviewImage(historyImg && historyImg !== "undefined" ? historyImg : null);
+    } else {
+      const stored = sessionStorage.getItem("uploadedImage");
+      setPreviewImage(stored && stored !== "undefined" ? stored : null);
+    }
+  }, [isHistoryView]);
 
   // Clear sessionStorage and navigate back to /scan
   const handleScanAnother = () => {
@@ -42,43 +77,66 @@ function ResultContent() {
   const wasteData = getWasteKnowledge(id, language);
 
   // Log scan event — localStorage mode saves directly in browser; MySQL mode POSTs to API
-  const [hasLogged, setHasLogged] = useState(false);
+  const hasLoggedRef = useRef(false);
   useEffect(() => {
-    if (hasLogged || !wasteData) return;
+    if (hasLoggedRef.current || !wasteData || isHistoryView) return;
 
-    if (isLocalStorageMode()) {
-      // Guest mode: save directly to browser localStorage
-      setHasLogged(true);
-      saveScan({
-        wasteId: id,
-        name: wasteData.name,
-        category: wasteData.category,
-        confidence,
-        recyclable: wasteData.recyclable,
-      });
-    } else if (isAuthenticated && user) {
-      // MySQL mode: POST to API route
-      setHasLogged(true);
-      fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    const performLogging = (compressedImg?: string) => {
+      console.log("Saving compressed image length:", compressedImg?.length);
+      if (isLocalStorageMode()) {
+        // Guest mode: save directly to browser localStorage
+        saveScan({
           wasteId: id,
           name: wasteData.name,
           category: wasteData.category,
-          confidence: confidence,
+          confidence,
           recyclable: wasteData.recyclable,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            console.log("Logged scan to history:", data.scanItem);
-          }
+          imageUrl: compressedImg || undefined,
+        });
+      } else if (isAuthenticated && user) {
+        // MySQL mode: POST to API route
+        fetch("/api/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wasteId: id,
+            name: wasteData.name,
+            category: wasteData.category,
+            confidence: confidence,
+            recyclable: wasteData.recyclable,
+            imageUrl: compressedImg || undefined,
+          }),
         })
-        .catch((err) => console.error("Error logging scan to history:", err));
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              console.log("Logged scan to history:", data.scanItem);
+            } else {
+              console.error("Failed to log scan:", data.message);
+            }
+          })
+          .catch((err) => console.error("Error logging scan to history:", err));
+      }
+    };
+
+    hasLoggedRef.current = true;
+    const storedImage = sessionStorage.getItem("uploadedImage");
+    
+    if (storedImage && (storedImage.startsWith("data:image") || storedImage.startsWith("blob:"))) {
+      console.log("Original image size:", storedImage.length);
+      compressImageBase64(storedImage, 300, 0.5)
+        .then((compressed) => {
+          console.log("Compressed image size:", compressed.length);
+          performLogging(compressed);
+        })
+        .catch((err) => {
+          console.error("Image compression failed:", err);
+          performLogging(); // Fallback without image
+        });
+    } else {
+      performLogging();
     }
-  }, [isAuthenticated, user, wasteData, hasLogged, id, confidence]);
+  }, [isAuthenticated, user, wasteData, id, confidence, isHistoryView]);
 
   if (!wasteData) {
     return (
@@ -108,17 +166,26 @@ function ResultContent() {
     <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         {/* Header Section */}
-        <div className="mb-10 flex flex-col items-center text-center sm:flex-row sm:justify-between sm:text-left">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
-              {t("result.title")}
-            </h1>
-            <p className="mt-2 text-lg text-zinc-500 dark:text-zinc-400">
-              {t("result.subtitle")}
-            </p>
+        <div className="mb-10 flex flex-col items-center text-center sm:flex-row sm:justify-between sm:text-left gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+            {isHistoryView && (
+              <Link href="/dashboard" className="p-2.5 rounded-full bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 self-center sm:mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+              </Link>
+            )}
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
+                {isHistoryView ? (language === "id" ? "Detail Riwayat" : "History Detail") : t("result.title")}
+              </h1>
+              <p className="mt-2 text-lg text-zinc-500 dark:text-zinc-400">
+                {isHistoryView ? (language === "id" ? "Melihat kembali data pemindaian Anda." : "Viewing your past scan data.") : t("result.subtitle")}
+              </p>
+            </div>
           </div>
 
-          <div className="mt-6 sm:mt-0">
+          <div className="mt-2 sm:mt-0">
             <button
               onClick={handleScanAnother}
               className="inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-sm ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:ring-zinc-700 dark:hover:bg-zinc-800"
