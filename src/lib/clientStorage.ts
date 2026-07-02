@@ -40,6 +40,7 @@ export interface LocalScanItem {
   scannedAt: string;
   co2Offset: number;
   recyclable: boolean;
+  imageUrl?: string;
 }
 
 export interface LocalChatSession {
