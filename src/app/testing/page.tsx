@@ -150,8 +150,8 @@ export default function TestingPage() {
       // Update progress
       setProgress(Math.round(((i + 1) / itemsToProcess.length) * 100));
 
-      // Introduce a slight delay (300ms) to safeguard API rate limits
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Beri jeda 4 detik (4000ms) antar pengujian untuk menghindari batas Rate Limit API gratis (umumnya 15 request per menit)
+      await new Promise((resolve) => setTimeout(resolve, 4000));
     }
 
     setIsRunning(false);
