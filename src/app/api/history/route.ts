@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { wasteId, name, category, confidence, recyclable } = await req.json();
+    const { wasteId, name, category, confidence, recyclable, imageUrl } = await req.json();
 
     if (!wasteId || !name || !category || confidence === undefined || recyclable === undefined) {
       return NextResponse.json(
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       category,
       confidence,
       recyclable,
+      imageUrl,
     });
 
     return NextResponse.json(

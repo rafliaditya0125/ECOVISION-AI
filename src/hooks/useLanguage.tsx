@@ -250,6 +250,10 @@ const dictionary: Record<string, Record<Language, string>> = {
     en: "Try Again",
     id: "Coba Lagi",
   },
+  "result.photoNotSaved": {
+    en: "Photo is not saved in history to conserve storage limits.",
+    id: "Foto tidak disimpan dalam riwayat untuk menghemat kapasitas penyimpanan.",
+  },
 
   // Recommendation Card
   "card.rec.title": {

@@ -18,6 +18,7 @@ export interface ScanHistoryItem {
   scannedAt: string;
   co2Offset: number;
   recyclable: boolean;
+  imageUrl?: string;
 }
 
 export interface UserStats {
@@ -120,6 +121,14 @@ async function initDb(p: mysql.Pool) {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  try {
+    await p.query("ALTER TABLE scan_history ADD COLUMN image_url LONGTEXT");
+  } catch (err: any) {
+    if (err.code !== 'ER_DUP_FIELDNAME') {
+      console.warn("Could not add image_url column:", err.message);
+    }
+  }
 }
 
 /**
@@ -222,6 +231,7 @@ export async function getScanHistory(): Promise<ScanHistoryItem[]> {
       scannedAt: new Date(row.scanned_at).toISOString(),
       co2Offset: Number(row.co2_offset),
       recyclable: Boolean(row.recyclable),
+      imageUrl: row.image_url || undefined,
     }));
   } catch (error) {
     console.error("Error executing getScanHistory query:", error);
@@ -247,6 +257,7 @@ export async function getUserHistory(userId: string): Promise<ScanHistoryItem[]>
       scannedAt: new Date(row.scanned_at).toISOString(),
       co2Offset: Number(row.co2_offset),
       recyclable: Boolean(row.recyclable),
+      imageUrl: row.image_url || undefined,
     }));
   } catch (error) {
     console.error("Error executing getUserHistory query:", error);
@@ -264,9 +275,9 @@ export async function saveScan(
   const co2Offset = CO2_MULTIPLIERS[item.wasteId] || 0.2;
 
   await p.query(
-    `INSERT INTO scan_history (id, user_id, waste_id, name, category, confidence, scanned_at, co2_offset, recyclable) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, userId, item.wasteId, item.name, item.category, item.confidence, new Date(scannedAt), co2Offset, item.recyclable ? 1 : 0]
+    `INSERT INTO scan_history (id, user_id, waste_id, name, category, confidence, scanned_at, co2_offset, recyclable, image_url) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, userId, item.wasteId, item.name, item.category, item.confidence, new Date(scannedAt), co2Offset, item.recyclable ? 1 : 0, item.imageUrl || null]
   );
 
   return {
@@ -279,6 +290,7 @@ export async function saveScan(
     scannedAt,
     co2Offset,
     recyclable: item.recyclable,
+    imageUrl: item.imageUrl,
   };
 }
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { AuthProvider } from "@/hooks/useAuth";
+import GlobalChatWidget from "@/components/GlobalChatWidget";
 
 export const metadata: Metadata = {
   title: "EcoVision AI - Scan. Sort. Save the Planet.",
@@ -34,12 +35,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col relative">
         <LanguageProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <GlobalChatWidget />
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>
   );
 }
-
