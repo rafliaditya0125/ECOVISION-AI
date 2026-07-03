@@ -134,6 +134,20 @@ export default function DashboardPage() {
         </span>
       );
     }
+    if (catLower.includes("b3")) {
+      return (
+        <span className="p-3 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl">
+          ⚠️
+        </span>
+      );
+    }
+    if (catLower.includes("medical") || catLower.includes("medis")) {
+      return (
+        <span className="p-3 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl">
+          🏥
+        </span>
+      );
+    }
     return (
       <span className="p-3 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl">
         🗑️

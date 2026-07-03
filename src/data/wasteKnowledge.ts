@@ -271,5 +271,95 @@ export const wasteKnowledgeDB: BilingualWasteKnowledge[] = [
     difficultyId: "Khusus",
     confidenceNoteEn: "Complex structures. AI usually detects the general object type (e.g., 'phone' or 'cable').",
     confidenceNoteId: "Struktur kompleks. AI biasanya mendeteksi tipe objek umum (seperti 'telepon' atau 'kabel')."
+  },
+  {
+    id: "b3-waste",
+    nameEn: "B3 Hazardous Waste",
+    nameId: "Limbah Bahan Berbahaya & Beracun (B3)",
+    categoryEn: "B3",
+    categoryId: "B3",
+    descriptionEn: "Household hazardous waste (B3) including aerosol cans, pesticides, paint, solvents, and strong chemical containers.",
+    descriptionId: "Limbah bahan berbahaya dan beracun (B3) rumah tangga termasuk kaleng aerosol, pestisida, cat, pelarut, dan wadah kimia keras.",
+    recyclable: false,
+    recyclingBinEn: "Red Bin / Toxic Waste Drop-off",
+    recyclingBinId: "Tempat Sampah Merah / Pengumpulan Khusus B3",
+    estimatedDecompositionEn: "Varies (non-biodegradable, persists indefinitely)",
+    estimatedDecompositionId: "Bervariasi (tidak dapat terurai secara alami)",
+    environmentalImpactEn: "Extremely toxic. Incorrect disposal can contaminate groundwater, poison soil, and cause serious health issues to humans and wildlife.",
+    environmentalImpactId: "Sangat beracun. Pembuangan yang salah dapat mencemari air tanah, meracuni tanah, serta menyebabkan masalah kesehatan serius bagi manusia dan satwa liar.",
+    recommendationsEn: [
+      "Do NOT mix with domestic waste or throw in regular bins.",
+      "Keep in original containers with labels intact.",
+      "Deliver to authorized local hazardous waste collection points."
+    ],
+    recommendationsId: [
+      "Jangan campur dengan sampah rumah tangga atau dibuang ke tempat sampah biasa.",
+      "Simpan dalam wadah asli dengan label yang masih utuh.",
+      "Serahkan ke pos pengumpulan limbah B3 setempat yang resmi."
+    ],
+    difficultyEn: "Specialized",
+    difficultyId: "Khusus",
+    confidenceNoteEn: "AI identifies containers of chemicals. Please handle carefully.",
+    confidenceNoteId: "AI mengidentifikasi wadah bahan kimia. Harap tangani dengan hati-hati."
+  },
+  {
+    id: "medical-waste",
+    nameEn: "Medical Waste",
+    nameId: "Sampah Medis",
+    categoryEn: "Medical",
+    categoryId: "Medis",
+    descriptionEn: "Waste generated from healthcare activities, such as used syringes, face masks, gloves, bandages, and expired medications.",
+    descriptionId: "Sampah yang dihasilkan dari aktivitas medis, seperti jarum suntik bekas, masker wajah, sarung tangan, perban, dan obat kadaluwarsa.",
+    recyclable: false,
+    recyclingBinEn: "Red Bin / Biohazard Waste Drop-off",
+    recyclingBinId: "Tempat Sampah Merah / Pengumpulan Sampah Medis",
+    estimatedDecompositionEn: "Varies (synthetic materials and plastics may take hundreds of years)",
+    estimatedDecompositionId: "Bervariasi (bahan sintetis dan plastik dapat memakan waktu ratusan tahun)",
+    environmentalImpactEn: "Presents biological and chemical hazards. Can spread infectious pathogens and disease if mixed with municipal waste.",
+    environmentalImpactId: "Menyajikan bahaya biologis dan kimiawi. Dapat menyebarkan patogen infeksius dan penyakit jika dicampur dengan sampah umum.",
+    recommendationsEn: [
+      "Cut the ear loops of face masks before discarding to prevent wildlife entanglement.",
+      "Place sharps and needles in puncture-proof containers before disposal.",
+      "Take expired medicines and clinical items to designated health clinics or hospital drop boxes."
+    ],
+    recommendationsId: [
+      "Gunting tali masker wajah sebelum dibuang untuk mencegah hewan terjerat.",
+      "Tempatkan jarum suntik dan benda tajam lainnya di wadah tahan tusukan sebelum dibuang.",
+      "Bawa obat kedaluwarsa dan limbah klinis ke puskesmas atau kotak pengumpulan rumah sakit terdekat."
+    ],
+    difficultyEn: "Specialized",
+    difficultyId: "Khusus",
+    confidenceNoteEn: "AI detects masks and syringes. Prioritize safe containment and biosafety disposal.",
+    confidenceNoteId: "AI mendeteksi masker dan jarum suntik. Prioritaskan penyimpanan aman dan pembuangan biosekuriti."
+  },
+  {
+    id: "metal-non-can",
+    nameEn: "Non-Can Metal",
+    nameId: "Logam Non-Kaleng",
+    categoryEn: "Metal",
+    categoryId: "Logam",
+    descriptionEn: "Household metal objects that are not cans, such as wires, cutlery (spoons, forks), metal pots, pans, and tools.",
+    descriptionId: "Objek logam rumah tangga selain kaleng, seperti kabel, peralatan makan (sendok, garpu), panci logam, wajan, dan perkakas.",
+    recyclable: true,
+    recyclingBinEn: "Yellow Bin / Metals",
+    recyclingBinId: "Tempat Sampah Kuning / Logam",
+    estimatedDecompositionEn: "100 - 500 years",
+    estimatedDecompositionId: "100 - 500 tahun",
+    environmentalImpactEn: "Recycling scrap metal uses significantly less energy than refining virgin ore, reducing greenhouse gas emissions.",
+    environmentalImpactId: "Mendaur ulang logam bekas menggunakan energi jauh lebih sedikit daripada memurnikan bijih mentah, sehingga mengurangi emisi gas rumah kaca.",
+    recommendationsEn: [
+      "Remove non-metal attachments like rubber handles if possible.",
+      "Ensure items are clean and free of excessive food residue or grease.",
+      "Take larger metal scrap to local recycling centers."
+    ],
+    recommendationsId: [
+      "Lepaskan bagian non-logam seperti pegangan karet jika memungkinkan.",
+      "Pastikan barang bersih dan bebas dari sisa makanan atau minyak berlebih.",
+      "Bawa logam bekas yang lebih besar ke pusat daur ulang setempat."
+    ],
+    difficultyEn: "Medium",
+    difficultyId: "Sedang",
+    confidenceNoteEn: "AI detects metallic items. Shape variation might trigger low confidence.",
+    confidenceNoteId: "AI mendeteksi barang berbahan logam. Variasi bentuk mungkin memicu tingkat keyakinan rendah."
   }
 ];
