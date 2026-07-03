@@ -70,6 +70,13 @@ export default function ScanPage() {
         throw new Error(data.message || t("scan.errorTitle"));
       }
 
+      // Save dynamic classification data to sessionStorage
+      if (data.dynamicData) {
+        sessionStorage.setItem("dynamicWasteData", JSON.stringify(data.dynamicData));
+      } else {
+        sessionStorage.removeItem("dynamicWasteData");
+      }
+
       // Navigate to result page, passing the waste ID and confidence as query params
       router.push(`/result?id=${encodeURIComponent(data.id)}&confidence=${data.confidence}`);
     } catch (err: unknown) {

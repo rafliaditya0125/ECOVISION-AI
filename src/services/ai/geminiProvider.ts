@@ -27,17 +27,34 @@ interface GeminiRawResponse {
 }
 
 /** Structured prompt that forces Gemini to respond with valid JSON only. */
-const CLASSIFICATION_PROMPT = `You are an image classification model.
+const CLASSIFICATION_PROMPT = `You are a waste classification and environmental expert model.
 Identify the main waste object in the image.
 Return ONLY valid JSON. No markdown, no explanation, no code fences.
 
-Example response:
-{"detectedLabel":"plastic-pet","confidence":96}
-
-Choose detectedLabel from ONLY these values:
-plastic-pet, plastic-hdpe, paper, cardboard, glass, metal-can, organic, battery, electronic
-
-If unsure, return the closest matching label.`;
+Response JSON Schema:
+{
+  "detectedLabel": "lowercase-hyphenated-identifier",
+  "confidence": 0-100,
+  "nameEn": "English item name",
+  "nameId": "Indonesian item name",
+  "categoryEn": "English category name (e.g. Plastic, Paper, Metal, Glass, Organic, E-Waste, Hazardous, B3, Medical)",
+  "categoryId": "Indonesian category name (e.g. Plastik, Kertas, Logam, Kaca, Organik, Sampah Elektronik, Berbahaya, B3, Medis)",
+  "descriptionEn": "English description of the item and its material",
+  "descriptionId": "Indonesian description",
+  "recyclable": true/false,
+  "recyclingBinEn": "Recycling bin recommendation in English",
+  "recyclingBinId": "Recycling bin recommendation in Indonesian",
+  "estimatedDecompositionEn": "Estimated decomposition time in English",
+  "estimatedDecompositionId": "Estimated decomposition time in Indonesian",
+  "environmentalImpactEn": "Environmental impact description in English",
+  "environmentalImpactId": "Environmental impact description in Indonesian",
+  "recommendationsEn": ["English action recommendations (at least 2)"],
+  "recommendationsId": ["Indonesian action recommendations (at least 2)"],
+  "difficultyEn": "English difficulty (Easy, Medium, Hard, Specialized)",
+  "difficultyId": "Indonesian difficulty (Mudah, Sedang, Sulit, Khusus)",
+  "confidenceNoteEn": "A mandatory responsible AI confidence note, disclaimer, or safety caution in English explaining the classification limits or safety instructions for handling this item (e.g. check local guidelines, handle hazardous things with gloves, etc.)",
+  "confidenceNoteId": "Catatan kepatuhan responsible AI, penafian, atau peringatan keselamatan wajib dalam bahasa Indonesia yang menjelaskan batasan klasifikasi atau instruksi penanganan aman barang ini (misalnya periksa aturan daerah setempat, gunakan sarung tangan untuk sampah berbahaya, dll.)"
+}`;
 
 /**
  * Converts a browser File object into a base64-encoded string.
@@ -129,9 +146,9 @@ export class GeminiProvider implements AIProvider {
       .trim();
 
     // Step 5: Parse JSON safely
-    let parsed: GeminiRawResponse;
+    let parsed: any;
     try {
-      parsed = JSON.parse(cleaned) as GeminiRawResponse;
+      parsed = JSON.parse(cleaned) as any;
     } catch {
       throw new Error(
         `GeminiProvider: Failed to parse Gemini response as JSON. Raw output: "${cleaned}"`
@@ -141,33 +158,44 @@ export class GeminiProvider implements AIProvider {
     // Step 6: Validate the detectedLabel field
     const label = typeof parsed.detectedLabel === "string"
       ? parsed.detectedLabel.trim().toLowerCase()
-      : "";
-
-    if (!isValidLabel(label)) {
-      throw new Error(
-        `GeminiProvider: Gemini returned an unrecognized label "${label}". ` +
-        `Expected one of: ${VALID_LABELS.join(", ")}`
-      );
-    }
+      : "unknown";
 
     // Step 7: Validate and clamp confidence
     const rawConfidence = typeof parsed.confidence === "number"
       ? parsed.confidence
       : parseFloat(String(parsed.confidence));
 
-    if (isNaN(rawConfidence)) {
-      throw new Error(
-        `GeminiProvider: Gemini returned an invalid confidence value: "${parsed.confidence}"`
-      );
-    }
+    const confidence = isNaN(rawConfidence) ? 95 : clampConfidence(rawConfidence);
 
-    const confidence = clampConfidence(rawConfidence);
+    const dynamicData = {
+      id: label,
+      nameEn: parsed.nameEn || label,
+      nameId: parsed.nameId || label,
+      categoryEn: parsed.categoryEn || "Other",
+      categoryId: parsed.categoryId || "Lainnya",
+      descriptionEn: parsed.descriptionEn || "",
+      descriptionId: parsed.descriptionId || "",
+      recyclable: typeof parsed.recyclable === "boolean" ? parsed.recyclable : true,
+      recyclingBinEn: parsed.recyclingBinEn || "General Waste",
+      recyclingBinId: parsed.recyclingBinId || "Tempat Sampah Umum",
+      estimatedDecompositionEn: parsed.estimatedDecompositionEn || "Unknown",
+      estimatedDecompositionId: parsed.estimatedDecompositionId || "Tidak diketahui",
+      environmentalImpactEn: parsed.environmentalImpactEn || "",
+      environmentalImpactId: parsed.environmentalImpactId || "",
+      recommendationsEn: Array.isArray(parsed.recommendationsEn) ? parsed.recommendationsEn : [],
+      recommendationsId: Array.isArray(parsed.recommendationsId) ? parsed.recommendationsId : [],
+      difficultyEn: parsed.difficultyEn || "Medium",
+      difficultyId: parsed.difficultyId || "Sedang",
+      confidenceNoteEn: parsed.confidenceNoteEn || "",
+      confidenceNoteId: parsed.confidenceNoteId || "",
+    };
 
     // Step 8: Return the normalized AIResult
     return {
       id: label,
       detectedLabel: label,
       confidence,
+      dynamicData,
     };
   }
 

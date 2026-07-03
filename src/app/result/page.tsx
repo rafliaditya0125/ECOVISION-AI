@@ -14,6 +14,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { isLocalStorageMode, saveScan } from "@/lib/clientStorage";
 import Link from "next/link";
+import { getClientApiKey } from "@/lib/apiKey";
 
 async function compressImageBase64(base64Str: string, maxWidth = 300, quality = 0.5): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -40,6 +41,21 @@ async function compressImageBase64(base64Str: string, maxWidth = 300, quality = 
     };
     img.onerror = (err) => reject(err);
     img.src = base64Str;
+  });
+}
+
+function renderParsedContent(content: string) {
+  // Split by bold markdown markers: **bold text**
+  const parts = content.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
   });
 }
 
@@ -70,11 +86,114 @@ function ResultContent() {
   // Clear sessionStorage and navigate back to /scan
   const handleScanAnother = () => {
     sessionStorage.removeItem("uploadedImage");
+    sessionStorage.removeItem("dynamicWasteData");
     router.push("/scan");
   };
 
-  // Look up the Knowledge Engine — null means unrecognized ID (passing current language preference)
-  const wasteData = getWasteKnowledge(id, language);
+  // State to hold dynamic classification result from Gemini
+  const [dynamicData, setDynamicData] = useState<any | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isHistoryView) {
+      const storedDynamic = sessionStorage.getItem("dynamicWasteData");
+      if (storedDynamic) {
+        try {
+          setDynamicData(JSON.parse(storedDynamic));
+        } catch (e) {
+          console.error("Failed to parse dynamicWasteData:", e);
+        }
+      }
+    }
+  }, [isHistoryView]);
+
+  // Map fields dynamically based on the current language or use static knowledge database fallback
+  const wasteData = dynamicData ? {
+    id: dynamicData.id,
+    name: language === "id" ? dynamicData.nameId : dynamicData.nameEn,
+    category: language === "id" ? dynamicData.categoryId : dynamicData.categoryEn,
+    description: language === "id" ? dynamicData.descriptionId : dynamicData.descriptionEn,
+    recyclable: dynamicData.recyclable,
+    recyclingBin: language === "id" ? dynamicData.recyclingBinId : dynamicData.recyclingBinEn,
+    estimatedDecomposition: language === "id" ? dynamicData.estimatedDecompositionId : dynamicData.estimatedDecompositionEn,
+    environmentalImpact: language === "id" ? dynamicData.environmentalImpactId : dynamicData.environmentalImpactEn,
+    recommendations: language === "id" ? dynamicData.recommendationsId : dynamicData.recommendationsEn,
+    difficulty: language === "id" ? dynamicData.difficultyId : dynamicData.difficultyEn,
+    confidenceNote: language === "id" ? dynamicData.confidenceNoteId : dynamicData.confidenceNoteEn,
+  } : getWasteKnowledge(id, language);
+
+  useEffect(() => {
+    if (wasteData && chatMessages.length === 0) {
+      setChatMessages([
+        {
+          role: "assistant",
+          content: language === "id"
+            ? `Halo! Saya melihat Anda memindai **${wasteData.name}** (${wasteData.category}). Apakah ada yang ingin Anda tanyakan lebih lanjut tentang cara mendaur ulang atau mengelola sampah ini?`
+            : `Hello! I see you scanned **${wasteData.name}** (${wasteData.category}). Is there anything further you would like to ask about recycling or managing this item?`
+        }
+      ]);
+    }
+  }, [wasteData, chatMessages.length, language]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, chatLoading]);
+
+  const handleSendChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || chatLoading || !wasteData) return;
+
+    const userMsg = { role: "user", content: chatInput };
+    const newMessages = [...chatMessages, userMsg];
+    setChatMessages(newMessages);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const contextMsg = {
+        role: "user",
+        content: `CONTEXT: The user has scanned a waste item with the following details:
+Item Name: ${wasteData.name}
+Category: ${wasteData.category}
+Recyclable: ${wasteData.recyclable ? 'Yes' : 'No'}
+Recycling Bin: ${wasteData.recyclingBin}
+Estimated Decomposition: ${wasteData.estimatedDecomposition}
+Environmental Impact: ${wasteData.environmentalImpact}
+Recommendations: ${wasteData.recommendations.join(', ')}
+
+Please use this context to answer any subsequent questions. Do not mention this context block directly unless asked.`
+      };
+
+      const payloadMessages = [contextMsg, ...newMessages];
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": getClientApiKey(),
+        },
+        body: JSON.stringify({
+          messages: payloadMessages,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setChatMessages([...newMessages, { role: "assistant", content: data.response }]);
+      } else {
+        setChatMessages([...newMessages, { role: "assistant", content: "Error generating response." }]);
+      }
+    } catch (err) {
+      console.error(err);
+      setChatMessages([...newMessages, { role: "assistant", content: "Error generating response." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   // Log scan event — localStorage mode saves directly in browser; MySQL mode POSTs to API
   const hasLoggedRef = useRef(false);
@@ -227,6 +346,88 @@ function ResultContent() {
             />
           </div>
         </div>
+
+        {/* Ask AI Further Action Button */}
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-blue-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 hover:shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer font-sans"
+          >
+            💬 {language === "id" ? "Tanyakan Lebih Lanjut ke AI" : "Ask AI Further"}
+          </button>
+        </div>
+
+        {/* Floating Closeable Chat Widget Popup Overlay */}
+        {isChatOpen && (
+          <div className="fixed bottom-6 right-6 z-[60] flex w-[calc(100vw-3rem)] sm:w-[400px] flex-col overflow-hidden rounded-3xl border border-zinc-200/50 bg-white shadow-2xl transition-all duration-300 dark:border-zinc-800/50 dark:bg-zinc-950 h-[500px]">
+            {/* Header */}
+            <div className="flex items-center justify-between bg-gradient-to-r from-emerald-500 to-blue-600 px-4 py-3 text-white">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🤖</span>
+                <span className="font-bold text-sm truncate max-w-[240px]">
+                  {language === "id" ? "Tanya AI: " : "Ask AI: "}{wasteData.name}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsChatOpen(false)}
+                className="p-1 hover:bg-white/20 rounded-full transition-colors cursor-pointer text-white font-bold h-7 w-7 flex items-center justify-center"
+                title={language === "id" ? "Tutup Sementara" : "Close"}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-grow overflow-y-auto p-4 bg-zinc-50/50 dark:bg-zinc-900/50 min-h-0 space-y-4">
+              {chatMessages.map((msg, idx) => {
+                const isUser = msg.role === "user";
+                return (
+                  <div key={idx} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
+                        isUser
+                          ? "bg-gradient-to-r from-emerald-500 to-blue-600 text-white"
+                          : "border border-zinc-200 bg-white text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                      }`}
+                    >
+                      {renderParsedContent(msg.content)}
+                    </div>
+                  </div>
+                );
+              })}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900">
+                    <div className="flex items-center gap-1.5 py-1">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-500" style={{ animationDelay: "0ms" }} />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-500" style={{ animationDelay: "150ms" }} />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-500" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Input Bar */}
+            <form onSubmit={handleSendChatMessage} className="border-t border-zinc-100 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950 flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={language === "id" ? "Tanyakan detail daur ulang sampah ini..." : "Ask details about recycling this item..."}
+                className="flex-grow rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs focus:border-emerald-500 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+              />
+              <button
+                type="submit"
+                disabled={!chatInput.trim() || chatLoading}
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 px-4 py-2 text-xs font-semibold text-white hover:scale-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {language === "id" ? "Kirim" : "Send"}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </main>
   );

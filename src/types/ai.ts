@@ -1,6 +1,29 @@
 /**
  * Represents the normalized result from any AI classification provider.
  */
+export interface AIDynamicData {
+  id: string;
+  nameEn: string;
+  nameId: string;
+  categoryEn: string;
+  categoryId: string;
+  descriptionEn: string;
+  descriptionId: string;
+  recyclable: boolean;
+  recyclingBinEn: string;
+  recyclingBinId: string;
+  estimatedDecompositionEn: string;
+  estimatedDecompositionId: string;
+  environmentalImpactEn: string;
+  environmentalImpactId: string;
+  recommendationsEn: string[];
+  recommendationsId: string[];
+  difficultyEn: string;
+  difficultyId: string;
+  confidenceNoteEn: string;
+  confidenceNoteId: string;
+}
+
 export interface AIResult {
   /** Unique identifier matching the local knowledge engine keys */
   id: string;
@@ -8,6 +31,8 @@ export interface AIResult {
   confidence: number;
   /** Raw or normalized label returned by the AI */
   detectedLabel: string;
+  /** Dynamic, detailed waste metadata filled by the AI model */
+  dynamicData?: AIDynamicData;
 }
 
 export interface ChatMessage {

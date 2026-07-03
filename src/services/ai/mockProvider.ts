@@ -18,9 +18,39 @@ export class MockProvider implements AIProvider {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     return {
-      id: "plastic-pet", // Maps perfectly to our local knowledge engine
+      id: "plastic-pet",
       confidence: 96,
       detectedLabel: "plastic-pet",
+      dynamicData: {
+        id: "plastic-pet",
+        nameEn: "Plastic PET (Type 1)",
+        nameId: "Plastik PET (Tipe 1)",
+        categoryEn: "Plastic",
+        categoryId: "Plastik",
+        descriptionEn: "Polyethylene terephthalate (PET) is highly recyclable and commonly used for water bottles, soft drinks, and food packaging.",
+        descriptionId: "Polietilena tereftalat (PET) sangat mudah didaur ulang dan biasanya digunakan untuk botol air, minuman ringan, dan wadah makanan.",
+        recyclable: true,
+        recyclingBinEn: "Yellow Bin / Plastics",
+        recyclingBinId: "Tempat Sampah Kuning / Plastik",
+        estimatedDecompositionEn: "450 years",
+        estimatedDecompositionId: "450 tahun",
+        environmentalImpactEn: "If not recycled, PET plastics break down into microplastics that pollute oceans and enter the food chain.",
+        environmentalImpactId: "Jika tidak didaur ulang, plastik PET terurai menjadi mikroplastik yang mencemari lautan dan masuk ke dalam rantai makanan.",
+        recommendationsEn: [
+          "Empty all liquids.",
+          "Crush the bottle to save space.",
+          "Leave the cap on, as modern recycling facilities can process them."
+        ],
+        recommendationsId: [
+          "Kosongkan semua cairan.",
+          "Remas botol untuk menghemat tempat.",
+          "Biarkan tutupnya terpasang, karena fasilitas daur ulang modern dapat memprosesnya."
+        ],
+        difficultyEn: "Easy",
+        difficultyId: "Mudah",
+        confidenceNoteEn: "Easily identifiable due to clarity and common shapes (e.g., water bottles).",
+        confidenceNoteId: "Mudah diidentifikasi karena kejernihan dan bentuknya yang umum (seperti botol air)."
+      }
     };
   }
 

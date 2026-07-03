@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         id: normalizedId,
         confidence: rawResult.confidence,
         detectedLabel: rawResult.detectedLabel,
+        dynamicData: rawResult.dynamicData,
       },
       { status: 200 }
     );
