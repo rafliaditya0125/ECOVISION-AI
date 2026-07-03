@@ -13,9 +13,12 @@ const VALID_LABELS = [
   "cardboard",
   "glass",
   "metal-can",
-  "organic",
+  "metal-non-can",
+  "organic-waste",
   "battery",
-  "electronic",
+  "electronic-waste",
+  "b3-waste",
+  "medical-waste",
 ] as const;
 
 type ValidLabel = (typeof VALID_LABELS)[number];

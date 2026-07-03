@@ -98,6 +98,34 @@ const EXACT_MAPPINGS: Record<string, string> = {
   "cable": "electronic-waste",
   "charger": "electronic-waste",
   "circuit-board": "electronic-waste",
+
+  // --- B3 Waste ---
+  "b3": "b3-waste",
+  "b3-waste": "b3-waste",
+  "limbah-b3": "b3-waste",
+  "chemical-container": "b3-waste",
+  "pesticide": "b3-waste",
+  "aerosol": "b3-waste",
+
+  // --- Medical Waste ---
+  "medical": "medical-waste",
+  "medical-waste": "medical-waste",
+  "sampah-medis": "medical-waste",
+  "syringe": "medical-waste",
+  "mask": "medical-waste",
+  "face-mask": "medical-waste",
+  "bandage": "medical-waste",
+
+  // --- Non-Can Metal ---
+  "metal-non-can": "metal-non-can",
+  "logam-non-kaleng": "metal-non-can",
+  "fork": "metal-non-can",
+  "spoon": "metal-non-can",
+  "knife": "metal-non-can",
+  "wire": "metal-non-can",
+  "pot": "metal-non-can",
+  "pan": "metal-non-can",
+  "nail": "metal-non-can",
 };
 
 /**
@@ -136,6 +164,27 @@ const KEYWORD_RULES: Array<{ keywords: string[]; result: string }> = [
   { keywords: ["tin", "can"], result: "metal-can" },
   { keywords: ["soda", "can"], result: "metal-can" },
   { keywords: ["beverage", "can"], result: "metal-can" },
+  { keywords: ["metal", "non", "can"], result: "metal-non-can" },
+  { keywords: ["logam", "non", "kaleng"], result: "metal-non-can" },
+  { keywords: ["wire"], result: "metal-non-can" },
+  { keywords: ["spoon"], result: "metal-non-can" },
+  { keywords: ["fork"], result: "metal-non-can" },
+  { keywords: ["knife"], result: "metal-non-can" },
+  { keywords: ["nail"], result: "metal-non-can" },
+
+  // B3 Waste
+  { keywords: ["b3"], result: "b3-waste" },
+  { keywords: ["limbah", "b3"], result: "b3-waste" },
+  { keywords: ["chemical"], result: "b3-waste" },
+  { keywords: ["pesticide"], result: "b3-waste" },
+  { keywords: ["aerosol"], result: "b3-waste" },
+
+  // Medical Waste
+  { keywords: ["medical"], result: "medical-waste" },
+  { keywords: ["medis"], result: "medical-waste" },
+  { keywords: ["syringe"], result: "medical-waste" },
+  { keywords: ["mask"], result: "medical-waste" },
+  { keywords: ["bandage"], result: "medical-waste" },
 
   // Glass
   { keywords: ["glass"], result: "glass" },

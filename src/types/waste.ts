@@ -8,7 +8,9 @@ export type WasteCategory =
   | 'Metal'
   | 'Organic'
   | 'Hazardous'
-  | 'E-Waste';
+  | 'E-Waste'
+  | 'B3'
+  | 'Medical';
 
 /**
  * Represents the difficulty level of recycling the item.

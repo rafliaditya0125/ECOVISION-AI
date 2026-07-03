@@ -36,9 +36,12 @@ export const CO2_MULTIPLIERS: Record<string, number> = {
   "cardboard": 0.8,
   "glass": 1.2,
   "metal-can": 1.6,
+  "metal-non-can": 1.2,
   "organic-waste": 0.3,
   "battery": 0.1,
   "electronic-waste": 0.5,
+  "b3-waste": 0.1,
+  "medical-waste": 0.0,
 };
 
 let pool: mysql.Pool | null = null;
