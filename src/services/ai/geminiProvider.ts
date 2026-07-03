@@ -13,9 +13,12 @@ const VALID_LABELS = [
   "cardboard",
   "glass",
   "metal-can",
-  "organic",
+  "metal-non-can",
+  "organic-waste",
   "battery",
-  "electronic",
+  "electronic-waste",
+  "b3-waste",
+  "medical-waste",
 ] as const;
 
 type ValidLabel = (typeof VALID_LABELS)[number];
@@ -35,7 +38,7 @@ Example response:
 {"detectedLabel":"plastic-pet","confidence":96}
 
 Choose detectedLabel from ONLY these values:
-plastic-pet, plastic-hdpe, paper, cardboard, glass, metal-can, organic, battery, electronic
+plastic-pet, plastic-hdpe, paper, cardboard, glass, metal-can, metal-non-can, organic-waste, battery, electronic-waste, b3-waste, medical-waste
 
 If unsure, return the closest matching label.`;
 
